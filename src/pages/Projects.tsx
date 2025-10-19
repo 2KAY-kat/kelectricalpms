@@ -11,6 +11,8 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, MapPin, Calendar, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { projectSchema } from "@/lib/validations";
+import { z } from "zod";
 
 export default function Projects() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -50,32 +52,48 @@ export default function Projects() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+      // Prepare data for validation
+      const dataToValidate = {
+        name: formData.name,
+        description: formData.description || undefined,
+        status: formData.status,
+        progress: parseInt(formData.progress.toString()) || 0,
+        start_date: formData.start_date || undefined,
+        end_date: formData.end_date || undefined,
+        budget: formData.budget ? parseFloat(formData.budget) : undefined,
+        client_name: formData.client_name || undefined,
+        client_contact: formData.client_contact || undefined,
+        location_address: formData.location_address || undefined,
+      };
 
-    const projectData: any = {
-      name: formData.name,
-      description: formData.description,
-      status: formData.status,
-      progress: parseInt(formData.progress.toString()),
-      created_by: user?.id,
-    };
+      // Validate input
+      const validatedData = projectSchema.parse(dataToValidate);
 
-    if (formData.start_date) projectData.start_date = formData.start_date;
-    if (formData.end_date) projectData.end_date = formData.end_date;
-    if (formData.budget) projectData.budget = parseFloat(formData.budget);
-    if (formData.client_name) projectData.client_name = formData.client_name;
-    if (formData.client_contact) projectData.client_contact = formData.client_contact;
-    if (formData.location_address) projectData.location_address = formData.location_address;
+      const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from("projects").insert(projectData);
+      const projectData: any = {
+        ...validatedData,
+        created_by: user?.id,
+      };
 
-    if (error) {
-      toast.error("Failed to create project");
-    } else {
-      toast.success("Project created successfully!");
-      setOpen(false);
-      resetForm();
-      fetchProjects();
+      const { error } = await supabase.from("projects").insert(projectData);
+
+      if (error) {
+        toast.error("Failed to create project");
+      } else {
+        toast.success("Project created successfully!");
+        setOpen(false);
+        resetForm();
+        fetchProjects();
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error("Invalid input data");
+      }
     }
   };
 

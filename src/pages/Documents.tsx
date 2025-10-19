@@ -11,6 +11,8 @@ import { Plus, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
+import { documentSchema } from "@/lib/validations";
+import { z } from "zod";
 
 export default function Documents() {
   const [documents, setDocuments] = useState<any[]>([]);
@@ -52,26 +54,42 @@ export default function Documents() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+      // Prepare data for validation
+      const dataToValidate = {
+        title: formData.title,
+        document_type: formData.document_type,
+        content: formData.content,
+        project_id: formData.project_id || undefined,
+      };
 
-    const docData: any = {
-      title: formData.title,
-      document_type: formData.document_type,
-      content: formData.content,
-      created_by: user?.id,
-    };
+      // Validate input
+      const validatedData = documentSchema.parse(dataToValidate);
 
-    if (formData.project_id) docData.project_id = formData.project_id;
+      const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from("documents").insert(docData);
+      const docData: any = {
+        ...validatedData,
+        created_by: user?.id,
+      };
 
-    if (error) {
-      toast.error("Failed to create document");
-    } else {
-      toast.success("Document created successfully!");
-      setOpen(false);
-      resetForm();
-      fetchData();
+      const { error } = await supabase.from("documents").insert(docData);
+
+      if (error) {
+        toast.error("Failed to create document");
+      } else {
+        toast.success("Document created successfully!");
+        setOpen(false);
+        resetForm();
+        fetchData();
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error("Invalid input data");
+      }
     }
   };
 

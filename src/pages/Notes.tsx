@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { noteSchema } from "@/lib/validations";
+import { z } from "zod";
 
 const noteColors = [
   { value: "#fbbf24", label: "Yellow" },
@@ -50,23 +52,43 @@ export default function Notes() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+      // Prepare data for validation
+      const dataToValidate = {
+        title: formData.title,
+        content: formData.content,
+        color: formData.color,
+        project_id: formData.project_id || undefined,
+      };
 
-    const { error } = await supabase.from("notes").insert({
-      title: formData.title,
-      content: formData.content,
-      color: formData.color,
-      project_id: formData.project_id || null,
-      created_by: user?.id,
-    });
+      // Validate input
+      const validatedData = noteSchema.parse(dataToValidate);
 
-    if (error) {
-      toast.error("Failed to create note");
-    } else {
-      toast.success("Note created successfully!");
-      setOpen(false);
-      resetForm();
-      fetchData();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { error } = await supabase.from("notes").insert({
+        title: validatedData.title,
+        content: validatedData.content,
+        color: validatedData.color,
+        project_id: validatedData.project_id || null,
+        created_by: user?.id,
+      });
+
+      if (error) {
+        toast.error("Failed to create note");
+      } else {
+        toast.success("Note created successfully!");
+        setOpen(false);
+        resetForm();
+        fetchData();
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error("Invalid input data");
+      }
     }
   };
 

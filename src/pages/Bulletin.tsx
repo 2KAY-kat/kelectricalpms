@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { bulletinSchema } from "@/lib/validations";
+import { z } from "zod";
 
 export default function Bulletin() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -43,22 +45,34 @@ export default function Bulletin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+      // Validate input
+      const validatedData = bulletinSchema.parse(formData);
 
-    const { error } = await supabase.from("bulletin_posts").insert({
-      title: formData.title,
-      content: formData.content,
-      priority: formData.priority,
-      created_by: user?.id,
-    });
+      const { data: { user } } = await supabase.auth.getUser();
 
-    if (error) {
-      toast.error("Failed to create post");
-    } else {
-      toast.success("Post created successfully!");
-      setOpen(false);
-      resetForm();
-      fetchPosts();
+      const { error } = await supabase.from("bulletin_posts").insert({
+        title: validatedData.title,
+        content: validatedData.content,
+        priority: validatedData.priority,
+        created_by: user?.id,
+      });
+
+      if (error) {
+        toast.error("Failed to create post");
+      } else {
+        toast.success("Post created successfully!");
+        setOpen(false);
+        resetForm();
+        fetchPosts();
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error("Invalid input data");
+      }
     }
   };
 

@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Building2 } from "lucide-react";
+import { brandingSchema } from "@/lib/validations";
+import { z } from "zod";
 
 export default function Branding() {
   const [loading, setLoading] = useState(true);
@@ -51,17 +53,30 @@ export default function Branding() {
     e.preventDefault();
     setSaving(true);
 
-    const { error } = await supabase
-      .from("company_branding")
-      .update(formData)
-      .eq("id", brandingId!);
+    try {
+      // Validate input
+      const validatedData = brandingSchema.parse(formData);
 
-    setSaving(false);
+      const { error } = await supabase
+        .from("company_branding")
+        .update(validatedData)
+        .eq("id", brandingId!);
 
-    if (error) {
-      toast.error("Failed to update branding");
-    } else {
-      toast.success("Company branding updated successfully!");
+      setSaving(false);
+
+      if (error) {
+        toast.error("Failed to update branding");
+      } else {
+        toast.success("Company branding updated successfully!");
+      }
+    } catch (error) {
+      setSaving(false);
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error("Invalid input data");
+      }
     }
   };
 
