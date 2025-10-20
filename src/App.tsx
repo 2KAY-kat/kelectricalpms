@@ -14,6 +14,7 @@ import Notes from "./pages/Notes";
 import Map from "./pages/Map";
 import Bulletin from "./pages/Bulletin";
 import Branding from "./pages/Branding";
+import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -75,6 +76,7 @@ const App = () => (
           <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
           <Route path="/bulletin" element={<ProtectedRoute><Bulletin /></ProtectedRoute>} />
           <Route path="/branding" element={<ProtectedRoute><Branding /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

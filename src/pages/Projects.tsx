@@ -13,8 +13,10 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { projectSchema } from "@/lib/validations";
 import { z } from "zod";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export default function Projects() {
+  const { isManager } = useUserRole();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -295,14 +297,14 @@ export default function Projects() {
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
-                {project.client_name && (
+                {isManager && project.client_name && (
                   <div className="text-sm">
                     <span className="text-muted-foreground">Client:</span>
                     <span className="ml-2 font-medium">{project.client_name}</span>
                   </div>
                 )}
 
-                {project.budget && (
+                {isManager && project.budget && (
                   <div className="flex items-center gap-2 text-sm">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium">${parseFloat(project.budget).toLocaleString()}</span>

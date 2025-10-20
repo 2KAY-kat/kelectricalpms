@@ -1,4 +1,4 @@
-import { Home, FolderKanban, FileText, StickyNote, MapPin, Bell, LogOut, Building2 } from "lucide-react";
+import { Home, FolderKanban, FileText, StickyNote, MapPin, Bell, LogOut, Building2, Shield } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: Home },
@@ -29,6 +30,7 @@ const navItems = [
 
 export function AppSidebar() {
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -75,6 +77,31 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/admin"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "hover:bg-sidebar-accent/50"
+                      }
+                    >
+                      <Shield className="h-4 w-4" />
+                      <span>Admin Panel</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-4">
