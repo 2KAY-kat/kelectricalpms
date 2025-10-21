@@ -5,14 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Download } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, FileText, Download, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
 import { documentSchema } from "@/lib/validations";
 import { z } from "zod";
+import { DocumentEditor } from "@/components/DocumentEditor";
 
 export default function Documents() {
   const [documents, setDocuments] = useState<any[]>([]);
@@ -20,12 +21,16 @@ export default function Documents() {
   const [branding, setBranding] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<any>(null);
+  const [deleteDoc, setDeleteDoc] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: "",
     document_type: "quotation",
     project_id: "",
     content: {
+      attention_to: "",
       items: [] as any[],
+      labor_cost: 0,
       notes: "",
       subtotal: 0,
       tax: 0,
@@ -55,33 +60,49 @@ export default function Documents() {
     e.preventDefault();
 
     try {
-      // Prepare data for validation
+      const items = formData.content.items || [];
+      const subtotal = items.reduce((sum: number, item: any) => sum + (item.amount || 0), 0);
+      const total = subtotal + (formData.content.labor_cost || 0);
+
       const dataToValidate = {
         title: formData.title,
         document_type: formData.document_type,
-        content: formData.content,
+        content: {
+          ...formData.content,
+          subtotal,
+          total,
+        },
         project_id: formData.project_id || undefined,
       };
 
-      // Validate input
       const validatedData = documentSchema.parse(dataToValidate);
 
-      const { data: { user } } = await supabase.auth.getUser();
+      if (editingDoc) {
+        const { error } = await supabase
+          .from("documents")
+          .update(validatedData)
+          .eq("id", editingDoc.id);
 
-      const docData: any = {
-        ...validatedData,
-        created_by: user?.id,
-      };
-
-      const { error } = await supabase.from("documents").insert(docData);
-
-      if (error) {
-        toast.error("Failed to create document");
+        if (error) {
+          toast.error("Failed to update document");
+        } else {
+          toast.success("Document updated successfully!");
+          setOpen(false);
+          setEditingDoc(null);
+          resetForm();
+          fetchData();
+        }
       } else {
-        toast.success("Document created successfully!");
-        setOpen(false);
-        resetForm();
-        fetchData();
+        const { error } = await supabase.from("documents").insert([validatedData as any]);
+
+        if (error) {
+          toast.error("Failed to create document");
+        } else {
+          toast.success("Document created successfully!");
+          setOpen(false);
+          resetForm();
+          fetchData();
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -93,13 +114,48 @@ export default function Documents() {
     }
   };
 
+  const handleEdit = (doc: any) => {
+    setEditingDoc(doc);
+    setFormData({
+      title: doc.title,
+      document_type: doc.document_type,
+      project_id: doc.project_id || "",
+      content: {
+        attention_to: doc.content?.attention_to || "",
+        items: doc.content?.items || [],
+        labor_cost: doc.content?.labor_cost || 0,
+        notes: doc.content?.notes || "",
+        subtotal: doc.content?.subtotal || 0,
+        tax: doc.content?.tax || 0,
+        total: doc.content?.total || 0,
+      },
+    });
+    setOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteDoc) return;
+
+    const { error } = await supabase.from("documents").delete().eq("id", deleteDoc.id);
+
+    if (error) {
+      toast.error("Failed to delete document");
+    } else {
+      toast.success("Document deleted successfully!");
+      setDeleteDoc(null);
+      fetchData();
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       title: "",
       document_type: "quotation",
       project_id: "",
       content: {
+        attention_to: "",
         items: [],
+        labor_cost: 0,
         notes: "",
         subtotal: 0,
         tax: 0,
@@ -111,71 +167,112 @@ export default function Documents() {
   const generatePDF = (doc: any) => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.width;
+    let yPos = 20;
 
-    // Company Header
+    // Header with company branding
     if (branding) {
-      pdf.setFontSize(20);
-      pdf.setTextColor(30, 64, 175); // Primary color
-      pdf.text(branding.company_name, pageWidth / 2, 20, { align: "center" });
+      pdf.setFontSize(22);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(branding.company_name.toLowerCase(), pageWidth / 2, yPos, { align: "center" });
+      yPos += 8;
 
-      pdf.setFontSize(10);
-      pdf.setTextColor(100, 100, 100);
-      if (branding.address) pdf.text(branding.address, pageWidth / 2, 28, { align: "center" });
-      if (branding.phone) pdf.text(`Phone: ${branding.phone}`, pageWidth / 2, 33, { align: "center" });
-      if (branding.email) pdf.text(`Email: ${branding.email}`, pageWidth / 2, 38, { align: "center" });
+      if (branding.tagline) {
+        pdf.setFontSize(10);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(branding.tagline, pageWidth / 2, yPos, { align: "center" });
+        yPos += 6;
+      }
+
+      pdf.setFontSize(9);
+      pdf.setTextColor(60, 60, 60);
+      const contacts = [];
+      if (branding.email) contacts.push(branding.email);
+      if (branding.phone) contacts.push(branding.phone);
+      if (branding.phone_secondary) contacts.push(branding.phone_secondary);
+      
+      if (contacts.length > 0) {
+        pdf.text(contacts.join("     "), pageWidth / 2, yPos, { align: "center" });
+        yPos += 5;
+      }
+    }
+
+    // Date
+    yPos += 5;
+    pdf.setFontSize(10);
+    pdf.text(`Date: ${format(new Date(doc.created_at), 'dd/MM/yyyy')}`, pageWidth - 20, yPos, { align: "right" });
+    yPos += 5;
+
+    // Attention To
+    if (doc.content?.attention_to) {
+      pdf.text(`Att: ${doc.content.attention_to}`, 20, yPos);
+      yPos += 10;
+    } else {
+      yPos += 5;
     }
 
     // Document Title
-    pdf.setFontSize(16);
-    pdf.setTextColor(0, 0, 0);
-    pdf.text(doc.title, 20, 55);
+    pdf.setFontSize(14);
+    pdf.setFont(undefined, "bold");
+    pdf.text(doc.title.toUpperCase(), 20, yPos);
+    yPos += 10;
 
-    // Document Type
-    pdf.setFontSize(12);
-    pdf.text(`Type: ${doc.document_type.toUpperCase()}`, 20, 62);
-    pdf.text(`Date: ${format(new Date(doc.created_at), 'MMM dd, yyyy')}`, 20, 68);
-
-    if (doc.projects?.name) {
-      pdf.text(`Project: ${doc.projects.name}`, 20, 74);
-    }
-
-    // Content
-    let yPos = 85;
+    // Table Header
     pdf.setFontSize(10);
+    pdf.setFont(undefined, "bold");
+    pdf.text("QTY", 20, yPos);
+    pdf.text("DESCRIPTION", 40, yPos);
+    pdf.text("@", 130, yPos);
+    pdf.text("AMOUNT", 165, yPos);
+    yPos += 5;
+    pdf.line(20, yPos, pageWidth - 20, yPos);
+    yPos += 5;
 
-    if (doc.content.items && doc.content.items.length > 0) {
-      pdf.text("Items:", 20, yPos);
+    // Table Items
+    pdf.setFont(undefined, "normal");
+    const items = doc.content?.items || [];
+    items.forEach((item: any) => {
+      if (yPos > 270) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      pdf.text(item.qty.toString(), 20, yPos);
+      const description = pdf.splitTextToSize(item.description, 85);
+      pdf.text(description, 40, yPos);
+      pdf.text(item.unit_price.toLocaleString(), 130, yPos);
+      pdf.text(`K ${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 165, yPos);
+      yPos += Math.max(5, description.length * 5);
+    });
+
+    yPos += 5;
+    pdf.line(20, yPos, pageWidth - 20, yPos);
+    yPos += 7;
+
+    // Totals
+    pdf.setFont(undefined, "bold");
+    const subtotal = doc.content?.subtotal || 0;
+    pdf.text(`TOTAL COST OF MATERIALS: K ${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 20, yPos);
+    yPos += 7;
+
+    if (doc.content?.labor_cost) {
+      pdf.text(`Labour cost: K ${doc.content.labor_cost.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 20, yPos);
       yPos += 7;
-
-      doc.content.items.forEach((item: any, index: number) => {
-        pdf.text(`${index + 1}. ${item.description || 'Item'} - $${item.amount || 0}`, 25, yPos);
-        yPos += 5;
-      });
-
-      yPos += 5;
-      pdf.text(`Subtotal: $${doc.content.subtotal || 0}`, 20, yPos);
-      yPos += 5;
-      pdf.text(`Tax: $${doc.content.tax || 0}`, 20, yPos);
-      yPos += 5;
-      pdf.setFontSize(12);
-      pdf.text(`Total: $${doc.content.total || 0}`, 20, yPos);
     }
 
-    if (doc.content.notes) {
+    const total = doc.content?.total || 0;
+    pdf.setFontSize(12);
+    pdf.text(`NET TOTAL: K ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 20, yPos);
+
+    // Notes
+    if (doc.content?.notes) {
       yPos += 10;
-      pdf.setFontSize(10);
-      pdf.text("Notes:", 20, yPos);
-      yPos += 5;
+      pdf.setFontSize(9);
+      pdf.setFont(undefined, "normal");
       const splitNotes = pdf.splitTextToSize(doc.content.notes, pageWidth - 40);
       pdf.text(splitNotes, 20, yPos);
     }
 
     pdf.save(`${doc.title.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
     toast.success("PDF downloaded successfully!");
-  };
-
-  const getDocTypeIcon = (type: string) => {
-    return <FileText className="h-4 w-4 text-primary" />;
   };
 
   if (loading) {
@@ -189,19 +286,27 @@ export default function Documents() {
           <h1 className="text-3xl font-bold text-foreground">Documents</h1>
           <p className="text-muted-foreground">Create and manage company documents</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen) {
+            setEditingDoc(null);
+            resetForm();
+          }
+        }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               New Document
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Document</DialogTitle>
-              <DialogDescription>Generate a new company document</DialogDescription>
+              <DialogTitle>{editingDoc ? "Edit Document" : "Create New Document"}</DialogTitle>
+              <DialogDescription>
+                {editingDoc ? "Update document details" : "Generate a new company document"}
+              </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Document Title *</Label>
@@ -210,7 +315,7 @@ export default function Documents() {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     required
-                    placeholder="e.g., Q-2024-001"
+                    placeholder="e.g., QUOTATION FOR WALL TOP ELECTRIC FENCE"
                   />
                 </div>
                 <div className="space-y-2">
@@ -224,9 +329,9 @@ export default function Documents() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="quotation">Quotation</SelectItem>
-                      <SelectItem value="receipt">Receipt</SelectItem>
-                      <SelectItem value="contract">Contract</SelectItem>
                       <SelectItem value="invoice">Invoice</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="receipt">Receipt</SelectItem>
                       <SelectItem value="proposal">Proposal</SelectItem>
                       <SelectItem value="report">Report</SelectItem>
                     </SelectContent>
@@ -253,26 +358,32 @@ export default function Documents() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Notes</Label>
-                <Textarea
-                  value={formData.content.notes}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      content: { ...formData.content, notes: e.target.value },
-                    })
-                  }
-                  rows={4}
-                  placeholder="Additional notes or terms..."
-                />
-              </div>
+              <DocumentEditor
+                items={formData.content.items}
+                laborCost={formData.content.labor_cost}
+                notes={formData.content.notes}
+                attentionTo={formData.content.attention_to}
+                onItemsChange={(items) =>
+                  setFormData({ ...formData, content: { ...formData.content, items } })
+                }
+                onLaborCostChange={(cost) =>
+                  setFormData({ ...formData, content: { ...formData.content, labor_cost: cost } })
+                }
+                onNotesChange={(notes) =>
+                  setFormData({ ...formData, content: { ...formData.content, notes } })
+                }
+                onAttentionToChange={(value) =>
+                  setFormData({ ...formData, content: { ...formData.content, attention_to: value } })
+                }
+              />
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Create Document</Button>
+                <Button type="submit">
+                  {editingDoc ? "Update Document" : "Create Document"}
+                </Button>
               </div>
             </form>
           </DialogContent>
@@ -296,7 +407,7 @@ export default function Documents() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    {getDocTypeIcon(doc.document_type)}
+                    <FileText className="h-4 w-4 text-primary" />
                     <CardTitle className="text-lg">{doc.title}</CardTitle>
                   </div>
                   <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium capitalize">
@@ -312,20 +423,53 @@ export default function Documents() {
                   Created: {format(new Date(doc.created_at), 'MMM dd, yyyy')}
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => generatePDF(doc)}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download PDF
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => generatePDF(doc)}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(doc)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeleteDoc(doc)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))
         )}
       </div>
+
+      <AlertDialog open={!!deleteDoc} onOpenChange={() => setDeleteDoc(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteDoc?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

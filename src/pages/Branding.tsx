@@ -15,12 +15,16 @@ export default function Branding() {
   const [brandingId, setBrandingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     company_name: "",
+    tagline: "",
     primary_color: "#1e40af",
     secondary_color: "#f59e0b",
     address: "",
     phone: "",
+    phone_secondary: "",
     email: "",
     website: "",
+    bank_name: "",
+    bank_account: "",
   });
 
   useEffect(() => {
@@ -38,12 +42,16 @@ export default function Branding() {
       setBrandingId(data.id);
       setFormData({
         company_name: data.company_name || "",
+        tagline: data.tagline || "",
         primary_color: data.primary_color || "#1e40af",
         secondary_color: data.secondary_color || "#f59e0b",
         address: data.address || "",
         phone: data.phone || "",
+        phone_secondary: data.phone_secondary || "",
         email: data.email || "",
         website: data.website || "",
+        bank_name: data.bank_name || "",
+        bank_account: data.bank_account || "",
       });
     }
     setLoading(false);
@@ -113,6 +121,16 @@ export default function Branding() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="tagline">Tagline / Slogan</Label>
+              <Input
+                id="tagline"
+                value={formData.tagline}
+                onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
+                placeholder="Your company's tagline"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="primary_color">Primary Color</Label>
@@ -165,16 +183,29 @@ export default function Branding() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">Primary Phone</Label>
                 <Input
                   id="phone"
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="+265 99 9121675"
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="phone_secondary">Secondary Phone</Label>
+                <Input
+                  id="phone_secondary"
+                  type="tel"
+                  value={formData.phone_secondary}
+                  onChange={(e) => setFormData({ ...formData, phone_secondary: e.target.value })}
+                  placeholder="+265 89 7644624"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -185,17 +216,39 @@ export default function Branding() {
                   placeholder="info@company.com"
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="website">Website</Label>
+                <Input
+                  id="website"
+                  type="url"
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  placeholder="https://company.com"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                type="url"
-                value={formData.website}
-                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                placeholder="https://company.com"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bank_name">Bank Name</Label>
+                <Input
+                  id="bank_name"
+                  value={formData.bank_name}
+                  onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
+                  placeholder="National Bank"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bank_account">Bank Account Number</Label>
+                <Input
+                  id="bank_account"
+                  value={formData.bank_account}
+                  onChange={(e) => setFormData({ ...formData, bank_account: e.target.value })}
+                  placeholder="1234567890"
+                />
+              </div>
             </div>
 
             <div className="flex justify-end">
@@ -216,11 +269,21 @@ export default function Branding() {
             <div className="font-semibold text-lg" style={{ color: formData.primary_color }}>
               {formData.company_name || "Company Name"}
             </div>
+            {formData.tagline && (
+              <div className="text-xs text-muted-foreground italic">{formData.tagline}</div>
+            )}
             <div className="text-muted-foreground">{formData.address || "Address"}</div>
-            <div className="text-muted-foreground">{formData.phone || "Phone"}</div>
+            <div className="text-muted-foreground">
+              {formData.phone || "Phone"} {formData.phone_secondary && `• ${formData.phone_secondary}`}
+            </div>
             <div className="text-muted-foreground">{formData.email || "Email"}</div>
             {formData.website && (
               <div className="text-muted-foreground">{formData.website}</div>
+            )}
+            {formData.bank_name && (
+              <div className="text-muted-foreground text-xs pt-2">
+                Bank: {formData.bank_name} {formData.bank_account && `- ${formData.bank_account}`}
+              </div>
             )}
           </div>
         </CardContent>

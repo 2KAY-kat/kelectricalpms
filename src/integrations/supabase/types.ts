@@ -80,40 +80,52 @@ export type Database = {
       company_branding: {
         Row: {
           address: string | null
+          bank_account: string | null
+          bank_name: string | null
           company_name: string
           created_at: string | null
           email: string | null
           id: string
           logo_url: string | null
           phone: string | null
+          phone_secondary: string | null
           primary_color: string | null
           secondary_color: string | null
+          tagline: string | null
           updated_at: string | null
           website: string | null
         }
         Insert: {
           address?: string | null
+          bank_account?: string | null
+          bank_name?: string | null
           company_name: string
           created_at?: string | null
           email?: string | null
           id?: string
           logo_url?: string | null
           phone?: string | null
+          phone_secondary?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          tagline?: string | null
           updated_at?: string | null
           website?: string | null
         }
         Update: {
           address?: string | null
+          bank_account?: string | null
+          bank_name?: string | null
           company_name?: string
           created_at?: string | null
           email?: string | null
           id?: string
           logo_url?: string | null
           phone?: string | null
+          phone_secondary?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          tagline?: string | null
           updated_at?: string | null
           website?: string | null
         }

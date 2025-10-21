@@ -44,7 +44,14 @@ export const documentSchema = z.object({
   document_type: z.enum(["quotation", "receipt", "contract", "invoice", "proposal", "report"]),
   project_id: z.string().uuid().optional(),
   content: z.object({
-    items: z.array(z.any()).optional(),
+    attention_to: z.string().max(200).optional(),
+    items: z.array(z.object({
+      qty: z.number().positive("Quantity must be positive"),
+      description: z.string().min(1, "Description is required").max(500),
+      unit_price: z.number().nonnegative("Unit price cannot be negative"),
+      amount: z.number().nonnegative("Amount cannot be negative"),
+    })).optional(),
+    labor_cost: z.number().nonnegative("Labor cost cannot be negative").optional(),
     notes: z.string()
       .max(5000, "Notes must be less than 5000 characters")
       .optional(),
@@ -83,6 +90,9 @@ export const brandingSchema = z.object({
   company_name: z.string()
     .min(1, "Company name is required")
     .max(200, "Company name must be less than 200 characters"),
+  tagline: z.string()
+    .max(200, "Tagline must be less than 200 characters")
+    .optional(),
   primary_color: z.string()
     .regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format"),
   secondary_color: z.string()
@@ -93,6 +103,9 @@ export const brandingSchema = z.object({
   phone: z.string()
     .max(50, "Phone must be less than 50 characters")
     .optional(),
+  phone_secondary: z.string()
+    .max(50, "Secondary phone must be less than 50 characters")
+    .optional(),
   email: z.string()
     .email("Invalid email format")
     .max(200, "Email must be less than 200 characters")
@@ -102,4 +115,10 @@ export const brandingSchema = z.object({
     .max(200, "Website must be less than 200 characters")
     .optional()
     .or(z.literal("")),
+  bank_name: z.string()
+    .max(200, "Bank name must be less than 200 characters")
+    .optional(),
+  bank_account: z.string()
+    .max(100, "Bank account must be less than 100 characters")
+    .optional(),
 });
