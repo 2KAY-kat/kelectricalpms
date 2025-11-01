@@ -54,6 +54,7 @@ export type Database = {
           created_by: string | null
           id: string
           priority: string | null
+          project_id: string | null
           title: string
           updated_at: string | null
         }
@@ -63,6 +64,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           priority?: string | null
+          project_id?: string | null
           title: string
           updated_at?: string | null
         }
@@ -72,10 +74,19 @@ export type Database = {
           created_by?: string | null
           id?: string
           priority?: string | null
+          project_id?: string | null
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bulletin_posts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_branding: {
         Row: {
@@ -223,6 +234,7 @@ export type Database = {
           client_name: string | null
           created_at: string | null
           created_by: string | null
+          current_phase: string | null
           description: string | null
           end_date: string | null
           id: string
@@ -230,6 +242,8 @@ export type Database = {
           location_lat: number | null
           location_lng: number | null
           name: string
+          phase_history: Json | null
+          phases: Json | null
           progress: number | null
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"] | null
@@ -241,6 +255,7 @@ export type Database = {
           client_name?: string | null
           created_at?: string | null
           created_by?: string | null
+          current_phase?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -248,6 +263,8 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           name: string
+          phase_history?: Json | null
+          phases?: Json | null
           progress?: number | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"] | null
@@ -259,6 +276,7 @@ export type Database = {
           client_name?: string | null
           created_at?: string | null
           created_by?: string | null
+          current_phase?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -266,6 +284,8 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           name?: string
+          phase_history?: Json | null
+          phases?: Json | null
           progress?: number | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"] | null
@@ -309,10 +329,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_manager_or_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "manager" | "employee" | "viewer"

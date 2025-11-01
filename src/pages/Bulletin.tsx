@@ -8,13 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { bulletinSchema } from "@/lib/validations";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 
 export default function Bulletin() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -197,12 +199,18 @@ export default function Bulletin() {
               key={post.id}
               className={`shadow-card hover:shadow-elevated transition-shadow ${
                 post.priority === 'urgent' ? 'border-l-4 border-l-destructive' : ''
-              }`}
+              } ${post.project_id ? 'cursor-pointer' : ''}`}
+              onClick={() => {
+                if (post.project_id) {
+                  navigate(`/projects?project=${post.project_id}`);
+                }
+              }}
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2">
+                      {post.project_id && <Briefcase className="h-4 w-4 text-primary" />}
                       {getPriorityIcon(post.priority)}
                       <CardTitle className="text-xl">{post.title}</CardTitle>
                     </div>
@@ -210,6 +218,12 @@ export default function Bulletin() {
                       <Badge variant={getPriorityColor(post.priority) as any}>
                         {post.priority}
                       </Badge>
+                      {post.project_id && (
+                        <Badge variant="outline" className="gap-1">
+                          <Briefcase className="h-3 w-3" />
+                          Project Update
+                        </Badge>
+                      )}
                       <span className="text-sm text-muted-foreground">
                         {format(new Date(post.created_at), 'MMM dd, yyyy • hh:mm a')}
                       </span>
@@ -219,6 +233,9 @@ export default function Bulletin() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground whitespace-pre-wrap">{post.content}</p>
+                {post.project_id && (
+                  <p className="text-xs text-primary mt-2">Click to view project details →</p>
+                )}
               </CardContent>
             </Card>
           ))

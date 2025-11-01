@@ -8,18 +8,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Plus, MapPin, Calendar, DollarSign } from "lucide-react";
+import { Plus, MapPin, Calendar, DollarSign, X, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { projectSchema } from "@/lib/validations";
 import { z } from "zod";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSearchParams } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 export default function Projects() {
   const { isManager, isEmployee } = useUserRole();
+  const [searchParams] = useSearchParams();
+  const highlightProjectId = searchParams.get("project");
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [phaseDialogOpen, setPhaseDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [newPhase, setNewPhase] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -31,11 +38,26 @@ export default function Projects() {
     client_name: "",
     client_contact: "",
     location_address: "",
+    current_phase: "planning",
+    phases: [] as string[],
   });
 
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  useEffect(() => {
+    if (highlightProjectId && projects.length > 0) {
+      const element = document.getElementById(`project-${highlightProjectId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.classList.add("ring-2", "ring-primary", "ring-offset-2");
+        setTimeout(() => {
+          element.classList.remove("ring-2", "ring-primary", "ring-offset-2");
+        }, 3000);
+      }
+    }
+  }, [highlightProjectId, projects]);
 
   const fetchProjects = async () => {
     const { data, error } = await supabase
@@ -67,6 +89,8 @@ export default function Projects() {
         client_name: formData.client_name || undefined,
         client_contact: formData.client_contact || undefined,
         location_address: formData.location_address || undefined,
+        current_phase: formData.current_phase,
+        phases: formData.phases,
       };
 
       // Validate input
@@ -111,7 +135,90 @@ export default function Projects() {
       client_name: "",
       client_contact: "",
       location_address: "",
+      current_phase: "planning",
+      phases: [],
     });
+  };
+
+  const handlePhaseUpdate = async (projectId: string, newPhase: string, newProgress?: number) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const updateData: any = {
+      current_phase: newPhase,
+      phase_history: [...(project.phase_history || []), {
+        phase: newPhase,
+        timestamp: new Date().toISOString(),
+        progress: newProgress !== undefined ? newProgress : project.progress
+      }]
+    };
+
+    if (newProgress !== undefined) {
+      updateData.progress = newProgress;
+    }
+
+    const { error } = await supabase
+      .from("projects")
+      .update(updateData)
+      .eq("id", projectId);
+
+    if (error) {
+      toast.error("Failed to update project phase");
+      return;
+    }
+
+    // Create bulletin post about the update
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from("bulletin_posts").insert({
+      title: `Project Update: ${project.name}`,
+      content: `${project.name} has been updated to phase: ${newPhase}${newProgress !== undefined ? ` (${newProgress}% complete)` : ''}`,
+      priority: "normal",
+      created_by: user?.id,
+      project_id: projectId,
+    });
+
+    toast.success("Project phase updated and posted to bulletin!");
+    fetchProjects();
+  };
+
+  const handleAddPhase = () => {
+    if (!newPhase.trim() || !selectedProject) return;
+    
+    const updatedPhases = [...(selectedProject.phases || []), newPhase.trim()];
+    
+    supabase
+      .from("projects")
+      .update({ phases: updatedPhases })
+      .eq("id", selectedProject.id)
+      .then(({ error }) => {
+        if (error) {
+          toast.error("Failed to add phase");
+        } else {
+          toast.success("Phase added successfully");
+          setNewPhase("");
+          fetchProjects();
+        }
+      });
+  };
+
+  const handleRemovePhase = (projectId: string, phaseToRemove: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const updatedPhases = (project.phases || []).filter((p: string) => p !== phaseToRemove);
+    
+    supabase
+      .from("projects")
+      .update({ phases: updatedPhases })
+      .eq("id", projectId)
+      .then(({ error }) => {
+        if (error) {
+          toast.error("Failed to remove phase");
+        } else {
+          toast.success("Phase removed");
+          fetchProjects();
+        }
+      });
   };
 
   const getStatusColor = (status: string) => {
@@ -288,7 +395,7 @@ export default function Projects() {
           </Card>
         ) : (
           projects.map((project) => (
-            <Card key={project.id} className="shadow-card hover:shadow-elevated transition-shadow">
+            <Card key={project.id} id={`project-${project.id}`} className="shadow-card hover:shadow-elevated transition-all">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg">{project.name}</CardTitle>
@@ -301,6 +408,51 @@ export default function Projects() {
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Current Phase Badge */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Current Phase:</span>
+                  <Badge variant="outline">{project.current_phase || 'planning'}</Badge>
+                </div>
+
+                {/* Phase Management for Managers */}
+                {isManager && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm">Update Phase</Label>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedProject(project);
+                          setPhaseDialogOpen(true);
+                        }}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Manage Phases
+                      </Button>
+                    </div>
+                    <Select
+                      value={project.current_phase || "planning"}
+                      onValueChange={(value) => handlePhaseUpdate(project.id, value)}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="planning">Planning</SelectItem>
+                        <SelectItem value="tubing">Tubing</SelectItem>
+                        <SelectItem value="wiring">Wiring</SelectItem>
+                        {(project.phases || []).map((phase: string) => (
+                          <SelectItem key={phase} value={phase}>
+                            {phase}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 {isManager && project.client_name && (
                   <div className="text-sm">
                     <span className="text-muted-foreground">Client:</span>
@@ -341,6 +493,46 @@ export default function Projects() {
           ))
         )}
       </div>
+
+      {/* Phase Management Dialog */}
+      <Dialog open={phaseDialogOpen} onOpenChange={setPhaseDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Manage Custom Phases</DialogTitle>
+            <DialogDescription>
+              Add custom phases for {selectedProject?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="New phase name (e.g., Foundation, Inspection)"
+                value={newPhase}
+                onChange={(e) => setNewPhase(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddPhase()}
+              />
+              <Button onClick={handleAddPhase}>Add</Button>
+            </div>
+            <div className="space-y-2">
+              <Label>Current Custom Phases:</Label>
+              <div className="flex flex-wrap gap-2">
+                {(selectedProject?.phases || []).map((phase: string) => (
+                  <Badge key={phase} variant="secondary" className="gap-1">
+                    {phase}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => handleRemovePhase(selectedProject.id, phase)}
+                    />
+                  </Badge>
+                ))}
+                {(!selectedProject?.phases || selectedProject.phases.length === 0) && (
+                  <p className="text-sm text-muted-foreground">No custom phases yet</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

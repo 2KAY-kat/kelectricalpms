@@ -26,6 +26,11 @@ export const projectSchema = z.object({
   location_address: z.string()
     .max(500, "Location address must be less than 500 characters")
     .optional(),
+  current_phase: z.string()
+    .max(100, "Phase name must be less than 100 characters")
+    .optional(),
+  phases: z.array(z.string())
+    .optional(),
 }).refine((data) => {
   if (data.start_date && data.end_date) {
     return new Date(data.start_date) <= new Date(data.end_date);
@@ -83,6 +88,7 @@ export const bulletinSchema = z.object({
     .min(1, "Post content is required")
     .max(5000, "Post content must be less than 5000 characters"),
   priority: z.enum(["low", "normal", "high", "urgent"]),
+  project_id: z.string().uuid().optional(),
 });
 
 // Branding validation schema
