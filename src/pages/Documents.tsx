@@ -14,8 +14,10 @@ import { format } from "date-fns";
 import { documentSchema } from "@/lib/validations";
 import { z } from "zod";
 import { DocumentEditor } from "@/components/DocumentEditor";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export default function Documents() {
+  const { isEmployee } = useUserRole();
   const [documents, setDocuments] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [branding, setBranding] = useState<any>(null);
@@ -379,19 +381,20 @@ export default function Documents() {
           <h1 className="text-3xl font-bold text-foreground">Documents</h1>
           <p className="text-muted-foreground">Create and manage company documents</p>
         </div>
-        <Dialog open={open} onOpenChange={(isOpen) => {
-          setOpen(isOpen);
-          if (!isOpen) {
-            setEditingDoc(null);
-            resetForm();
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              New Document
-            </Button>
-          </DialogTrigger>
+        {!isEmployee && (
+          <Dialog open={open} onOpenChange={(isOpen) => {
+            setOpen(isOpen);
+            if (!isOpen) {
+              setEditingDoc(null);
+              resetForm();
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New Document
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingDoc ? "Edit Document" : "Create New Document"}</DialogTitle>
@@ -481,6 +484,7 @@ export default function Documents() {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -488,10 +492,12 @@ export default function Documents() {
           <Card className="col-span-full">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-muted-foreground mb-4">No documents yet</p>
-              <Button onClick={() => setOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create First Document
-              </Button>
+              {!isEmployee && (
+                <Button onClick={() => setOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create First Document
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -526,20 +532,24 @@ export default function Documents() {
                     <Download className="mr-2 h-4 w-4" />
                     Download
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(doc)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setDeleteDoc(doc)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  {!isEmployee && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(doc)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDeleteDoc(doc)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

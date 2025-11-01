@@ -25,12 +25,11 @@ const navItems = [
   { title: "Notes", url: "/notes", icon: StickyNote },
   { title: "Map", url: "/map", icon: MapPin },
   { title: "Bulletin", url: "/bulletin", icon: Bell },
-  { title: "Branding", url: "/branding", icon: Building2 },
 ];
 
 export function AppSidebar() {
+  const { isAdmin, isManager } = useUserRole();
   const navigate = useNavigate();
-  const { isAdmin } = useUserRole();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -77,6 +76,31 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isManager && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Settings</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/branding"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "hover:bg-sidebar-accent/50"
+                      }
+                    >
+                      <Building2 className="h-4 w-4" />
+                      <span>Company Branding</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {isAdmin && (
           <SidebarGroup>

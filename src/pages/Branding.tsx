@@ -5,11 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Building2 } from "lucide-react";
+import { Building2, ShieldAlert } from "lucide-react";
 import { brandingSchema } from "@/lib/validations";
 import { z } from "zod";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export default function Branding() {
+  const { isManager, loading: roleLoading } = useUserRole();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [brandingId, setBrandingId] = useState<string | null>(null);
@@ -88,8 +90,20 @@ export default function Branding() {
     }
   };
 
-  if (loading) {
+  if (roleLoading || loading) {
     return <div className="flex items-center justify-center min-h-[400px]">Loading branding settings...</div>;
+  }
+
+  if (!isManager) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <ShieldAlert className="h-16 w-16 text-muted-foreground" />
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-foreground">Access Restricted</h2>
+          <p className="text-muted-foreground">Only administrators and managers can access branding settings.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
