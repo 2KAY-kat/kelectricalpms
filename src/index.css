@@ -1,3 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+Pro&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -57,11 +60,14 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(226 71% 40%), hsl(226 71% 55%));
     --gradient-accent: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 65%));
     --gradient-hero: linear-gradient(135deg, hsl(226 71% 40%) 0%, hsl(226 71% 30%) 100%);
-    
+
     /* Shadows */
     --shadow-soft: 0 2px 8px -2px hsl(226 71% 40% / 0.1);
     --shadow-card: 0 4px 16px -4px hsl(226 71% 40% / 0.15);
     --shadow-elevated: 0 8px 24px -6px hsl(226 71% 40% / 0.2);
+    --font-sans: Roboto, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    --font-serif: "Source Serif Pro", ui-serif, Georgia, Cambria, Times New Roman, Times, serif;
+    --font-mono: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
   }
 
   .dark {
@@ -111,6 +117,9 @@ All colors MUST be HSL.
     --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
     --shadow-card: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
     --shadow-elevated: 0 8px 24px -6px hsl(0 0% 0% / 0.5);
+    --font-sans: Roboto, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    --font-serif: "Source Serif Pro", ui-serif, Georgia, Cambria, Times New Roman, Times, serif;
+    --font-mono: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
   }
 }
 
