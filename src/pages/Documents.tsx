@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, FileText, Download, Edit, Trash2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Plus, FileText, Download, Edit, Trash2, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
@@ -15,6 +17,7 @@ import { documentSchema } from "@/lib/validations";
 import { z } from "zod";
 import { DocumentEditor } from "@/components/DocumentEditor";
 import { useUserRole } from "@/hooks/useUserRole";
+import { cn } from "@/lib/utils";
 
 export default function Documents() {
   const { isEmployee } = useUserRole();
@@ -29,6 +32,7 @@ export default function Documents() {
     title: "",
     document_type: "quotation",
     project_id: "",
+    document_date: new Date(),
     content: {
       attention_to: "",
       items: [] as any[],
@@ -71,6 +75,7 @@ export default function Documents() {
         document_type: formData.document_type,
         content: {
           ...formData.content,
+          document_date: formData.document_date.toISOString(),
           subtotal,
           total,
         },
@@ -122,6 +127,7 @@ export default function Documents() {
       title: doc.title,
       document_type: doc.document_type,
       project_id: doc.project_id || "",
+      document_date: doc.content?.document_date ? new Date(doc.content.document_date) : new Date(doc.created_at),
       content: {
         attention_to: doc.content?.attention_to || "",
         items: doc.content?.items || [],
@@ -154,6 +160,7 @@ export default function Documents() {
       title: "",
       document_type: "quotation",
       project_id: "",
+      document_date: new Date(),
       content: {
         attention_to: "",
         items: [],
@@ -183,6 +190,10 @@ export default function Documents() {
       });
     };
 
+    // Get document date from content or fallback to created_at
+    const docDate = doc.content?.document_date ? new Date(doc.content.document_date) : new Date(doc.created_at);
+    const dateStr = format(docDate, "dd/MM/yyyy");
+
     try {
       // Use the exact header image for consistency
       const headerImg = await loadImage("/images/pdf-header.png");
@@ -190,6 +201,13 @@ export default function Documents() {
       const headerWidth = pageWidth - 24;
       const headerHeight = headerWidth * (headerImg.height / headerImg.width);
       pdf.addImage(headerImg, "PNG", 12, yPos, headerWidth, headerHeight);
+      
+      // Overlay the date on top right of header
+      pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFont(undefined, "normal");
+      pdf.text(`Date: ${dateStr}`, pageWidth - 15, yPos + 8, { align: "right" });
+      
       yPos += headerHeight + 5;
     } catch (e) {
       console.log("Could not load header image");
@@ -202,10 +220,15 @@ export default function Documents() {
       pdf.setTextColor(245, 158, 11);
       pdf.setFont(undefined, "italic");
       pdf.text("b e y o n d   e l e c t r i c a l s", 45, yPos + 14);
+      
+      // Date on right
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFont(undefined, "normal");
+      pdf.text(`Date: ${dateStr}`, pageWidth - 15, yPos + 8, { align: "right" });
+      
       yPos += 25;
     }
 
-    // Add date (overlay on right side if needed, or after header)
     pdf.setFontSize(10);
     pdf.setTextColor(0, 0, 0);
     pdf.setFont(undefined, "normal");
@@ -450,7 +473,7 @@ export default function Documents() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Document Title *</Label>
                   <Input
@@ -479,6 +502,32 @@ export default function Documents() {
                       <SelectItem value="report">Report</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Document Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formData.document_date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.document_date ? format(formData.document_date, "dd/MM/yyyy") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.document_date}
+                        onSelect={(date) => date && setFormData({ ...formData, document_date: date })}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
