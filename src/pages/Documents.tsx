@@ -166,66 +166,117 @@ export default function Documents() {
     });
   };
 
-  const generatePDF = (doc: any) => {
+  const generatePDF = async (doc: any) => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.width;
     const pageHeight = pdf.internal.pageSize.height;
-    let yPos = 20;
+    let yPos = 12;
+
+    // Load logos
+    const loadImage = (src: string): Promise<HTMLImageElement> => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    };
+
+    try {
+      // Load both logo parts
+      const [kLogo, sunLogo] = await Promise.all([
+        loadImage("/images/kelectrical-logo.png"),
+        loadImage("/images/logopart.png"),
+      ]);
+
+      // Draw K logo (left side)
+      pdf.addImage(kLogo, "PNG", 15, yPos - 2, 18, 18);
+      
+      // Draw sun/solar logo (next to K)
+      pdf.addImage(sunLogo, "PNG", 30, yPos - 2, 12, 18);
+
+    } catch (e) {
+      console.log("Could not load logos");
+    }
 
     // Header with company branding
     if (branding) {
-      // Company name in dark blue, bold, uppercase
-      pdf.setFontSize(18);
+      // Company name in dark blue, bold, uppercase - positioned after logos
+      pdf.setFontSize(14);
       pdf.setTextColor(30, 58, 138); // Dark blue
       pdf.setFont(undefined, "bold");
-      pdf.text(branding.company_name.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
-      yPos += 6;
+      const companyName = branding.company_name?.toUpperCase() || "ELECTRICAL & POWER ENGINEERING";
+      pdf.text(companyName, 45, yPos + 5);
 
-      // Tagline in orange
-      if (branding.tagline) {
-        pdf.setFontSize(10);
-        pdf.setTextColor(245, 158, 11); // Orange
-        pdf.setFont(undefined, "italic");
-        pdf.text(branding.tagline, pageWidth / 2, yPos, { align: "center" });
-        yPos += 8;
-      } else {
-        yPos += 4;
-      }
-
-      // Contact info row
+      // Tagline in orange - "beyond electricals"
       pdf.setFontSize(9);
+      pdf.setTextColor(245, 158, 11); // Orange
+      pdf.setFont(undefined, "italic");
+      const tagline = branding.tagline || "beyond electricals";
+      pdf.text(tagline, 45, yPos + 11);
+
+      // Date on the right - formatted like screenshot
+      pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFont(undefined, "normal");
+      const dateStr = format(new Date(doc.created_at), "dd/MM/yyyy");
+      pdf.text(`Date: ${dateStr}`, pageWidth - 20, yPos + 5, { align: "right" });
+
+      yPos += 18;
+
+      // Draw horizontal line under header
+      pdf.setDrawColor(30, 58, 138);
+      pdf.setLineWidth(0.5);
+      pdf.line(15, yPos, pageWidth - 15, yPos);
+      yPos += 3;
+
+      // Contact info row with icons
+      pdf.setFontSize(8);
       pdf.setTextColor(60, 60, 60);
       pdf.setFont(undefined, "normal");
-      
-      const leftX = 20;
-      let contactY = yPos;
-      
-      if (branding.email) {
-        pdf.text(`Email: ${branding.email}`, leftX, contactY);
-        contactY += 5;
+
+      // Website (left)
+      if (branding.website) {
+        pdf.setDrawColor(30, 58, 138);
+        pdf.circle(18, yPos + 2.5, 2, "S"); // Globe icon placeholder
+        pdf.text(branding.website, 22, yPos + 3.5);
       }
+
+      // Phone numbers (center)
+      const phoneX = 80;
       if (branding.phone) {
-        pdf.text(`Tel: ${branding.phone}`, leftX, contactY);
-        contactY += 5;
+        pdf.circle(phoneX, yPos + 2.5, 2, "S"); // Phone icon placeholder
+        pdf.text(branding.phone, phoneX + 4, yPos + 3.5);
       }
       if (branding.phone_secondary) {
-        pdf.text(`Mobile: ${branding.phone_secondary}`, leftX, contactY);
+        pdf.text(branding.phone_secondary, phoneX + 4, yPos + 7);
       }
-      
-      yPos = Math.max(yPos + 15, contactY + 5);
-    }
 
-    // Date on the right
-    pdf.setFontSize(10);
-    pdf.setTextColor(0, 0, 0);
-    pdf.text(`Date: ${format(new Date(doc.created_at), 'dd/MM/yyyy')}`, pageWidth - 20, 20, { align: "right" });
+      // Email (right side)
+      if (branding.email) {
+        const emailX = 140;
+        pdf.rect(emailX - 2, yPos + 1, 3, 2); // Email icon placeholder
+        pdf.text(branding.email, emailX + 3, yPos + 3.5);
+      }
+
+      yPos += 12;
+
+      // Draw another horizontal line
+      pdf.setDrawColor(30, 58, 138);
+      pdf.setLineWidth(0.3);
+      pdf.line(15, yPos, pageWidth - 15, yPos);
+      yPos += 5;
+    }
 
     // Attention To with line
     if (doc.content?.attention_to) {
       pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFont(undefined, "normal");
       pdf.text(`Att: ${doc.content.attention_to}`, 20, yPos);
       const textWidth = pdf.getTextWidth(`Att: ${doc.content.attention_to}`);
-      // Draw line
+      pdf.setDrawColor(0, 0, 0);
       pdf.line(20 + textWidth + 2, yPos + 1, pageWidth - 20, yPos + 1);
       yPos += 10;
     }
