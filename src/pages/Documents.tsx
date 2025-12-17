@@ -172,7 +172,7 @@ export default function Documents() {
     const pageHeight = pdf.internal.pageSize.height;
     let yPos = 10;
 
-    // Load logo
+    // Load header image
     const loadImage = (src: string): Promise<HTMLImageElement> => {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -184,67 +184,37 @@ export default function Documents() {
     };
 
     try {
-      const logo = await loadImage("/images/combined-logo.png");
-      pdf.addImage(logo, "PNG", 12, yPos, 30, 25);
+      // Use the exact header image for consistency
+      const headerImg = await loadImage("/images/pdf-header.png");
+      // Calculate aspect ratio to fit width
+      const headerWidth = pageWidth - 24;
+      const headerHeight = headerWidth * (headerImg.height / headerImg.width);
+      pdf.addImage(headerImg, "PNG", 12, yPos, headerWidth, headerHeight);
+      yPos += headerHeight + 5;
     } catch (e) {
-      console.log("Could not load logo");
+      console.log("Could not load header image");
+      // Fallback: Draw header manually
+      pdf.setFontSize(16);
+      pdf.setTextColor(30, 58, 138);
+      pdf.setFont(undefined, "bold");
+      pdf.text("ELECTRICAL & POWER ENGINEERING", 45, yPos + 8);
+      pdf.setFontSize(10);
+      pdf.setTextColor(245, 158, 11);
+      pdf.setFont(undefined, "italic");
+      pdf.text("b e y o n d   e l e c t r i c a l s", 45, yPos + 14);
+      yPos += 25;
     }
 
-    // Company name - ELECTRICAL & POWER ENGINEERING
-    pdf.setFontSize(16);
-    pdf.setTextColor(30, 58, 138); // Dark blue
-    pdf.setFont(undefined, "bold");
-    pdf.text("ELECTRICAL & POWER ENGINEERING", 45, yPos + 8);
-
-    // Tagline - "beyond electricals" with letter spacing
-    pdf.setFontSize(10);
-    pdf.setTextColor(245, 158, 11); // Orange
-    pdf.setFont(undefined, "italic");
-    pdf.text("b e y o n d   e l e c t r i c a l s", 45, yPos + 14);
-
-    // Date on the right
+    // Add date (overlay on right side if needed, or after header)
     pdf.setFontSize(10);
     pdf.setTextColor(0, 0, 0);
     pdf.setFont(undefined, "normal");
-    const dateStr = format(new Date(doc.created_at), "dd/MM/yyyy");
-    pdf.text(`Date: ${dateStr}`, pageWidth - 15, yPos + 8, { align: "right" });
-
-    yPos += 20;
-
-    // Contact info row
-    pdf.setFontSize(8);
-    pdf.setTextColor(60, 60, 60);
-    pdf.setFont(undefined, "normal");
-
-    // Website with globe icon (circle)
-    pdf.setDrawColor(30, 58, 138);
-    pdf.circle(47, yPos + 1.5, 2, "S");
-    pdf.text("https://kelectrical.vercel.app", 51, yPos + 2.5);
-
-    // Email with envelope icon (rectangle)
-    pdf.rect(46, yPos + 6, 3, 2);
-    pdf.text("k.electricalandpowerengineering@gmail.com", 51, yPos + 7.5);
-
-    // Phone icon and numbers (center)
-    const phoneX = 115;
-    pdf.setLineWidth(0.5);
-    // Phone icon placeholder
-    pdf.line(phoneX, yPos, phoneX + 2, yPos + 4);
-    pdf.text("099 912 1675", phoneX + 5, yPos + 2.5);
-    pdf.text("089 764 4624", phoneX + 5, yPos + 7);
-
-    // Phone with receiver icon and international numbers (right)
-    const intPhoneX = 155;
-    pdf.circle(intPhoneX, yPos + 1.5, 2, "S");
-    pdf.text("265 (0) 99 9121 675", intPhoneX + 4, yPos + 2.5);
-    pdf.text("265 (0) 89 7644 624", intPhoneX + 4, yPos + 7);
-
-    yPos += 14;
 
     // Thin separator line
-    pdf.setDrawColor(200, 200, 200);
-    pdf.setLineWidth(0.3);
+    pdf.setDrawColor(30, 58, 138);
+    pdf.setLineWidth(0.5);
     pdf.line(12, yPos, pageWidth - 12, yPos);
+    yPos += 8;
     yPos += 8;
 
     // Attention To with dotted line
