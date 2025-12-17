@@ -170,9 +170,9 @@ export default function Documents() {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.width;
     const pageHeight = pdf.internal.pageSize.height;
-    let yPos = 12;
+    let yPos = 10;
 
-    // Load logos
+    // Load logo
     const loadImage = (src: string): Promise<HTMLImageElement> => {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -184,237 +184,263 @@ export default function Documents() {
     };
 
     try {
-      // Load both logo parts
-      const [kLogo, sunLogo] = await Promise.all([
-        loadImage("/images/kelectrical-logo.png"),
-        loadImage("/images/logopart.png"),
-      ]);
-
-      // Draw K logo (left side)
-      pdf.addImage(kLogo, "PNG", 15, yPos - 2, 18, 18);
-      
-      // Draw sun/solar logo (next to K)
-      pdf.addImage(sunLogo, "PNG", 30, yPos - 2, 12, 18);
-
+      const logo = await loadImage("/images/combined-logo.png");
+      pdf.addImage(logo, "PNG", 12, yPos, 30, 25);
     } catch (e) {
-      console.log("Could not load logos");
+      console.log("Could not load logo");
     }
 
-    // Header with company branding
-    if (branding) {
-      // Company name in dark blue, bold, uppercase - positioned after logos
-      pdf.setFontSize(14);
-      pdf.setTextColor(30, 58, 138); // Dark blue
-      pdf.setFont(undefined, "bold");
-      const companyName = branding.company_name?.toUpperCase() || "ELECTRICAL & POWER ENGINEERING";
-      pdf.text(companyName, 45, yPos + 5);
+    // Company name - ELECTRICAL & POWER ENGINEERING
+    pdf.setFontSize(16);
+    pdf.setTextColor(30, 58, 138); // Dark blue
+    pdf.setFont(undefined, "bold");
+    pdf.text("ELECTRICAL & POWER ENGINEERING", 45, yPos + 8);
 
-      // Tagline in orange - "beyond electricals"
-      pdf.setFontSize(9);
-      pdf.setTextColor(245, 158, 11); // Orange
-      pdf.setFont(undefined, "italic");
-      const tagline = branding.tagline || "beyond electricals";
-      pdf.text(tagline, 45, yPos + 11);
+    // Tagline - "beyond electricals" with letter spacing
+    pdf.setFontSize(10);
+    pdf.setTextColor(245, 158, 11); // Orange
+    pdf.setFont(undefined, "italic");
+    pdf.text("b e y o n d   e l e c t r i c a l s", 45, yPos + 14);
 
-      // Date on the right - formatted like screenshot
-      pdf.setFontSize(10);
-      pdf.setTextColor(0, 0, 0);
-      pdf.setFont(undefined, "normal");
-      const dateStr = format(new Date(doc.created_at), "dd/MM/yyyy");
-      pdf.text(`Date: ${dateStr}`, pageWidth - 20, yPos + 5, { align: "right" });
+    // Date on the right
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont(undefined, "normal");
+    const dateStr = format(new Date(doc.created_at), "dd/MM/yyyy");
+    pdf.text(`Date: ${dateStr}`, pageWidth - 15, yPos + 8, { align: "right" });
 
-      yPos += 18;
+    yPos += 20;
 
-      // Draw horizontal line under header
-      pdf.setDrawColor(30, 58, 138);
-      pdf.setLineWidth(0.5);
-      pdf.line(15, yPos, pageWidth - 15, yPos);
-      yPos += 3;
+    // Contact info row
+    pdf.setFontSize(8);
+    pdf.setTextColor(60, 60, 60);
+    pdf.setFont(undefined, "normal");
 
-      // Contact info row with icons
-      pdf.setFontSize(8);
-      pdf.setTextColor(60, 60, 60);
-      pdf.setFont(undefined, "normal");
+    // Website with globe icon (circle)
+    pdf.setDrawColor(30, 58, 138);
+    pdf.circle(47, yPos + 1.5, 2, "S");
+    pdf.text("https://kelectrical.vercel.app", 51, yPos + 2.5);
 
-      // Website (left)
-      if (branding.website) {
-        pdf.setDrawColor(30, 58, 138);
-        pdf.circle(18, yPos + 2.5, 2, "S"); // Globe icon placeholder
-        pdf.text(branding.website, 22, yPos + 3.5);
-      }
+    // Email with envelope icon (rectangle)
+    pdf.rect(46, yPos + 6, 3, 2);
+    pdf.text("k.electricalandpowerengineering@gmail.com", 51, yPos + 7.5);
 
-      // Phone numbers (center)
-      const phoneX = 80;
-      if (branding.phone) {
-        pdf.circle(phoneX, yPos + 2.5, 2, "S"); // Phone icon placeholder
-        pdf.text(branding.phone, phoneX + 4, yPos + 3.5);
-      }
-      if (branding.phone_secondary) {
-        pdf.text(branding.phone_secondary, phoneX + 4, yPos + 7);
-      }
+    // Phone icon and numbers (center)
+    const phoneX = 115;
+    pdf.setLineWidth(0.5);
+    // Phone icon placeholder
+    pdf.line(phoneX, yPos, phoneX + 2, yPos + 4);
+    pdf.text("099 912 1675", phoneX + 5, yPos + 2.5);
+    pdf.text("089 764 4624", phoneX + 5, yPos + 7);
 
-      // Email (right side)
-      if (branding.email) {
-        const emailX = 140;
-        pdf.rect(emailX - 2, yPos + 1, 3, 2); // Email icon placeholder
-        pdf.text(branding.email, emailX + 3, yPos + 3.5);
-      }
+    // Phone with receiver icon and international numbers (right)
+    const intPhoneX = 155;
+    pdf.circle(intPhoneX, yPos + 1.5, 2, "S");
+    pdf.text("265 (0) 99 9121 675", intPhoneX + 4, yPos + 2.5);
+    pdf.text("265 (0) 89 7644 624", intPhoneX + 4, yPos + 7);
 
-      yPos += 12;
+    yPos += 14;
 
-      // Draw another horizontal line
-      pdf.setDrawColor(30, 58, 138);
-      pdf.setLineWidth(0.3);
-      pdf.line(15, yPos, pageWidth - 15, yPos);
-      yPos += 5;
+    // Thin separator line
+    pdf.setDrawColor(200, 200, 200);
+    pdf.setLineWidth(0.3);
+    pdf.line(12, yPos, pageWidth - 12, yPos);
+    yPos += 8;
+
+    // Attention To with dotted line
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont(undefined, "normal");
+    const attText = doc.content?.attention_to ? `Att: ${doc.content.attention_to}` : "Att:";
+    pdf.text(attText, 12, yPos);
+    
+    // Draw dotted line after "Att:"
+    const attWidth = pdf.getTextWidth(attText);
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.3);
+    // Draw dots
+    for (let x = 12 + attWidth + 2; x < pageWidth - 12; x += 3) {
+      pdf.text(".", x, yPos);
     }
+    yPos += 10;
 
-    // Attention To with line
-    if (doc.content?.attention_to) {
-      pdf.setFontSize(10);
-      pdf.setTextColor(0, 0, 0);
-      pdf.setFont(undefined, "normal");
-      pdf.text(`Att: ${doc.content.attention_to}`, 20, yPos);
-      const textWidth = pdf.getTextWidth(`Att: ${doc.content.attention_to}`);
-      pdf.setDrawColor(0, 0, 0);
-      pdf.line(20 + textWidth + 2, yPos + 1, pageWidth - 20, yPos + 1);
-      yPos += 10;
-    }
-
-    // Document Title - centered
+    // Document Title - centered and bold
     pdf.setFontSize(12);
     pdf.setFont(undefined, "bold");
     pdf.text(doc.title.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
     yPos += 8;
 
-    // Table with borders
-    const tableStartY = yPos;
-    const col1X = 20;
-    const col2X = 45;
-    const col3X = 140;
-    const col4X = 160;
-    const col5X = pageWidth - 30;
-    const col6X = pageWidth - 20;
-    const rowHeight = 7;
-
-    // Table Header - dark blue background
-    pdf.setFillColor(30, 58, 138); // Dark blue
-    pdf.rect(col1X, yPos, col6X - col1X, rowHeight, 'F');
+    // Table structure matching template exactly
+    const marginX = 12;
+    const tableWidth = pageWidth - (marginX * 2);
+    const col1Width = 25;  // QTY
+    const col2Width = 95;  // DESCRIPTION
+    const col3Width = 25;  // @
+    const col4Width = 20;  // K (unit price column)
+    const col5Width = 16;  // K (kwacha)
+    const col6Width = tableWidth - col1Width - col2Width - col3Width - col4Width - col5Width; // t (tambala)
     
-    pdf.setTextColor(255, 255, 255); // White text
-    pdf.setFontSize(10);
+    const col1X = marginX;
+    const col2X = col1X + col1Width;
+    const col3X = col2X + col2Width;
+    const col4X = col3X + col3Width;
+    const col5X = col4X + col4Width;
+    const col6X = col5X + col5Width;
+    const tableEndX = marginX + tableWidth;
+    
+    const rowHeight = 8;
+
+    // Table Header Row 1 - White background with black text
+    const headerRow1Y = yPos;
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.5);
+    
+    // Draw header row 1 cells
+    pdf.rect(col1X, yPos, col1Width, rowHeight);
+    pdf.rect(col2X, yPos, col2Width, rowHeight);
+    pdf.rect(col3X, yPos, col3Width, rowHeight);
+    pdf.rect(col4X, yPos, tableEndX - col4X, rowHeight); // AMOUNT spans to end
+    
+    pdf.setFontSize(11);
     pdf.setFont(undefined, "bold");
-    pdf.text("QTY", col1X + 2, yPos + 5);
-    pdf.text("DESCRIPTION", col2X + 2, yPos + 5);
-    pdf.text("@", col3X + 2, yPos + 5);
-    pdf.text("AMOUNT", col4X + 2, yPos + 5);
-    pdf.text("K", col5X + 2, yPos + 5);
-    pdf.text("t", col6X - 8, yPos + 5);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text("QTY", col1X + col1Width/2, yPos + 6, { align: "center" });
+    pdf.text("DESCRIPTION", col2X + col2Width/2, yPos + 6, { align: "center" });
+    pdf.text("@", col3X + col3Width/2, yPos + 6, { align: "center" });
+    pdf.text("AMOUNT", col4X + (tableEndX - col4X)/2, yPos + 6, { align: "center" });
     
     yPos += rowHeight;
 
-    // Draw vertical lines for header
-    pdf.setDrawColor(30, 58, 138);
-    pdf.line(col1X, tableStartY, col1X, yPos);
-    pdf.line(col2X, tableStartY, col2X, yPos);
-    pdf.line(col3X, tableStartY, col3X, yPos);
-    pdf.line(col4X, tableStartY, col4X, yPos);
-    pdf.line(col5X, tableStartY, col5X, yPos);
-    pdf.line(col6X, tableStartY, col6X, yPos);
+    // Table Header Row 2 - Dark blue background
+    pdf.setFillColor(30, 58, 138);
+    pdf.rect(col1X, yPos, tableWidth, rowHeight, 'F');
+    
+    // Draw vertical lines on blue row
+    pdf.setDrawColor(255, 255, 255);
+    pdf.line(col2X, yPos, col2X, yPos + rowHeight);
+    pdf.line(col3X, yPos, col3X, yPos + rowHeight);
+    pdf.line(col4X, yPos, col4X, yPos + rowHeight);
+    pdf.line(col5X, yPos, col5X, yPos + rowHeight);
+    pdf.line(col6X, yPos, col6X, yPos + rowHeight);
+    
+    // Blue row text
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(10);
+    pdf.text("K", col4X + col4Width/2, yPos + 6, { align: "center" });
+    pdf.text("K", col5X + col5Width/2, yPos + 6, { align: "center" });
+    pdf.text("t", col6X + (tableEndX - col6X)/2, yPos + 6, { align: "center" });
+    
+    yPos += rowHeight;
+    
+    // Reset for data rows
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont(undefined, "normal");
+    pdf.setFontSize(9);
 
     // Table Items
-    pdf.setFont(undefined, "normal");
-    pdf.setTextColor(0, 0, 0);
-    pdf.setDrawColor(0, 0, 0);
     const items = doc.content?.items || [];
     
-    items.forEach((item: any, index: number) => {
-      const rowStartY = yPos;
-      
-      if (yPos > 250) {
+    items.forEach((item: any) => {
+      if (yPos > pageHeight - 50) {
         pdf.addPage();
         yPos = 20;
       }
 
-      // Format amount with decimals
+      const rowStartY = yPos;
+      
+      // Format amount
       const amountStr = item.amount.toFixed(2);
       const [kwacha, tambala] = amountStr.split('.');
 
-      pdf.text(item.qty.toString(), col1X + 2, yPos + 5);
-      
-      const description = pdf.splitTextToSize(item.description, col3X - col2X - 4);
-      pdf.text(description, col2X + 2, yPos + 5);
-      
-      pdf.text(item.unit_price.toFixed(2), col3X + 2, yPos + 5);
-      pdf.text(kwacha, col4X + 2, yPos + 5, { align: "right", baseline: "top" });
-      pdf.text(tambala, col5X + 2, yPos + 5);
+      // Draw row cells
+      pdf.rect(col1X, yPos, col1Width, rowHeight);
+      pdf.rect(col2X, yPos, col2Width, rowHeight);
+      pdf.rect(col3X, yPos, col3Width, rowHeight);
+      pdf.rect(col4X, yPos, col4Width, rowHeight);
+      pdf.rect(col5X, yPos, col5Width, rowHeight);
+      pdf.rect(col6X, yPos, tableEndX - col6X, rowHeight);
 
-      const itemHeight = Math.max(rowHeight, description.length * 5);
-      yPos += itemHeight;
+      // Cell content
+      pdf.text(item.qty.toString(), col1X + col1Width/2, yPos + 5.5, { align: "center" });
+      
+      const descLines = pdf.splitTextToSize(item.description, col2Width - 4);
+      pdf.text(descLines[0] || "", col2X + 2, yPos + 5.5);
+      
+      pdf.text(item.unit_price.toLocaleString(), col4X + col4Width - 2, yPos + 5.5, { align: "right" });
+      pdf.text(kwacha, col5X + col5Width - 2, yPos + 5.5, { align: "right" });
+      pdf.text(tambala, col6X + (tableEndX - col6X)/2, yPos + 5.5, { align: "center" });
 
-      // Draw cell borders
-      pdf.rect(col1X, rowStartY, col2X - col1X, itemHeight);
-      pdf.rect(col2X, rowStartY, col3X - col2X, itemHeight);
-      pdf.rect(col3X, rowStartY, col4X - col3X, itemHeight);
-      pdf.rect(col4X, rowStartY, col5X - col4X, itemHeight);
-      pdf.rect(col5X, rowStartY, col6X - col5X, itemHeight);
+      yPos += rowHeight;
     });
 
-    // Totals section with borders
-    const totalsStartY = yPos;
-    
-    // Total Cost of Materials
+    // Add empty rows to fill space (minimum 10 rows)
+    const minRows = 10;
+    const emptyRowsNeeded = Math.max(0, minRows - items.length);
+    for (let i = 0; i < emptyRowsNeeded; i++) {
+      if (yPos > pageHeight - 50) break;
+      
+      pdf.rect(col1X, yPos, col1Width, rowHeight);
+      pdf.rect(col2X, yPos, col2Width, rowHeight);
+      pdf.rect(col3X, yPos, col3Width, rowHeight);
+      pdf.rect(col4X, yPos, col4Width, rowHeight);
+      pdf.rect(col5X, yPos, col5Width, rowHeight);
+      pdf.rect(col6X, yPos, tableEndX - col6X, rowHeight);
+      
+      pdf.text("00", col6X + (tableEndX - col6X)/2, yPos + 5.5, { align: "center" });
+      
+      yPos += rowHeight;
+    }
+
+    // Totals section
     pdf.setFont(undefined, "bold");
-    pdf.rect(col1X, yPos, col4X - col1X, rowHeight);
-    pdf.rect(col4X, yPos, col6X - col4X, rowHeight);
-    pdf.text("TOTAL COST OF MATERIALS", col1X + 2, yPos + 5);
+    pdf.setFontSize(10);
+    
+    // TOTAL COST OF MATERIALS
+    pdf.rect(col1X, yPos, col5X - col1X, rowHeight);
+    pdf.rect(col5X, yPos, tableEndX - col5X, rowHeight);
+    pdf.text("TOTAL COST OF MATERIALS", col1X + 4, yPos + 5.5);
     
     const subtotal = doc.content?.subtotal || 0;
-    const subtotalStr = subtotal.toFixed(2);
-    const [subK, subT] = subtotalStr.split('.');
-    pdf.text(subK, col4X + 2, yPos + 5, { align: "right" });
-    pdf.text(subT, col5X + 2, yPos + 5);
+    pdf.text(subtotal.toLocaleString(), col5X + (col5Width + (tableEndX - col6X))/2, yPos + 5.5, { align: "center" });
     
     yPos += rowHeight;
 
-    // Labour cost
-    pdf.rect(col1X, yPos, col4X - col1X, rowHeight);
-    pdf.rect(col4X, yPos, col6X - col4X, rowHeight);
-    pdf.text("Labour cost", col1X + 2, yPos + 5);
+    // Labour cost and transport
+    pdf.setFont(undefined, "italic");
+    pdf.rect(col1X, yPos, col5X - col1X, rowHeight);
+    pdf.rect(col5X, yPos, tableEndX - col5X, rowHeight);
+    pdf.text("Labour cost and transport", col1X + 4, yPos + 5.5);
     
     const laborCost = doc.content?.labor_cost || 0;
-    const laborStr = laborCost.toFixed(2);
-    const [laborK, laborT] = laborStr.split('.');
-    pdf.text(laborK, col4X + 2, yPos + 5, { align: "right" });
-    pdf.text(laborT, col5X + 2, yPos + 5);
+    pdf.text(laborCost.toLocaleString(), col5X + (col5Width + (tableEndX - col6X))/2, yPos + 5.5, { align: "center" });
     
     yPos += rowHeight;
 
     // NET TOTAL
-    pdf.rect(col1X, yPos, col4X - col1X, rowHeight);
-    pdf.rect(col4X, yPos, col6X - col4X, rowHeight);
-    pdf.setFontSize(12);
-    pdf.text("NET TOTAL", col1X + 2, yPos + 5);
+    pdf.setFont(undefined, "bold");
+    pdf.setFontSize(11);
+    pdf.rect(col1X, yPos, col5X - col1X, rowHeight);
+    pdf.rect(col5X, yPos, tableEndX - col5X, rowHeight);
+    pdf.text("NET TOTAL", col1X + 4, yPos + 5.5);
     
     const total = doc.content?.total || 0;
-    const totalStr = total.toFixed(2);
-    const [totalK, totalT] = totalStr.split('.');
-    pdf.text(totalK, col4X + 2, yPos + 5, { align: "right" });
-    pdf.text(totalT, col5X + 2, yPos + 5);
+    pdf.text(total.toLocaleString(), col5X + (col5Width + (tableEndX - col6X))/2, yPos + 5.5, { align: "center" });
     
     yPos += rowHeight;
 
     // Orange footer bar
-    pdf.setFillColor(245, 158, 11); // Orange
-    pdf.rect(col1X, yPos, col6X - col1X, 5, 'F');
+    pdf.setFillColor(245, 158, 11);
+    pdf.rect(col1X, yPos, tableWidth, 4, 'F');
 
-    // Notes
+    // Notes section (if any)
     if (doc.content?.notes) {
       yPos += 10;
       pdf.setFontSize(9);
       pdf.setFont(undefined, "normal");
-      const splitNotes = pdf.splitTextToSize(doc.content.notes, pageWidth - 40);
-      pdf.text(splitNotes, 20, yPos);
+      pdf.setTextColor(0, 0, 0);
+      const splitNotes = pdf.splitTextToSize(doc.content.notes, tableWidth);
+      pdf.text(splitNotes, col1X, yPos);
     }
 
     pdf.save(`${doc.title.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
