@@ -9,13 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, FileText, Download, Edit, Trash2, CalendarIcon } from "lucide-react";
+import { Plus, FileText, Download, Edit, Trash2, CalendarIcon, Eye } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
 import { documentSchema } from "@/lib/validations";
 import { z } from "zod";
 import { DocumentEditor } from "@/components/DocumentEditor";
+import { DocumentPreview } from "@/components/DocumentPreview";
 import { useUserRole } from "@/hooks/useUserRole";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ export default function Documents() {
   const [open, setOpen] = useState(false);
   const [editingDoc, setEditingDoc] = useState<any>(null);
   const [deleteDoc, setDeleteDoc] = useState<any>(null);
+  const [previewDoc, setPreviewDoc] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: "",
     document_type: "quotation",
@@ -622,6 +624,13 @@ export default function Documents() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setPreviewDoc(doc)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex-1"
                     onClick={() => generatePDF(doc)}
                   >
@@ -652,6 +661,12 @@ export default function Documents() {
           ))
         )}
       </div>
+
+      <DocumentPreview
+        doc={previewDoc}
+        open={!!previewDoc}
+        onOpenChange={(open) => !open && setPreviewDoc(null)}
+      />
 
       <AlertDialog open={!!deleteDoc} onOpenChange={() => setDeleteDoc(null)}>
         <AlertDialogContent>
