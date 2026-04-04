@@ -204,11 +204,11 @@ export default function Documents() {
       const headerHeight = headerWidth * (headerImg.height / headerImg.width);
       pdf.addImage(headerImg, "PNG", 12, yPos, headerWidth, headerHeight);
       
-      // Overlay date on the letterhead's date placeholder (bottom-right of header)
-      pdf.setFontSize(9);
+      // Overlay date on the letterhead's date placeholder (top-right of header)
+      pdf.setFontSize(12);
       pdf.setTextColor(0, 0, 0);
       pdf.setFont(undefined, "bold");
-      pdf.text(`Date: ${dateStr}`, pageWidth - 15, yPos + headerHeight - 4, { align: "right" });
+      pdf.text(`Date: ${dateStr}`, pageWidth - 13, yPos + headerHeight - 18, { align: "right" });
       
       yPos += headerHeight + 5;
     } catch (e) {
@@ -235,28 +235,28 @@ export default function Documents() {
     pdf.setTextColor(0, 0, 0);
     pdf.setFont(undefined, "normal");
 
-    // Thin separator line
-    pdf.setDrawColor(30, 58, 138);
-    pdf.setLineWidth(0.5);
-    pdf.line(12, yPos, pageWidth - 12, yPos);
-    yPos += 8;
-    yPos += 8;
+    // // Thin separator line
+    // pdf.setDrawColor(30, 58, 138);
+    // pdf.setLineWidth(0.5);
+    // pdf.line(12, yPos, pageWidth - 12, yPos);
+    // yPos += 8;
+    // yPos += 8;
 
     // Attention To with dotted line
-    pdf.setFontSize(10);
+    pdf.setFontSize(12);
     pdf.setTextColor(0, 0, 0);
     pdf.setFont(undefined, "normal");
     const attText = doc.content?.attention_to ? `Att: ${doc.content.attention_to}` : "Att:";
     pdf.text(attText, 12, yPos);
     
     // Draw dotted line after "Att:"
-    const attWidth = pdf.getTextWidth(attText);
+    // const attWidth = pdf.getTextWidth(attText);
     pdf.setDrawColor(0, 0, 0);
     pdf.setLineWidth(0.3);
     // Draw dots
-    for (let x = 12 + attWidth + 2; x < pageWidth - 12; x += 3) {
-      pdf.text(".", x, yPos);
-    }
+    // for (let x = 12 + attWidth + 2; x < pageWidth - 12; x += 3) {
+    //   pdf.text(".", x, yPos);
+    // }
     yPos += 10;
 
     // Document Title - centered and bold
@@ -498,10 +498,10 @@ export default function Documents() {
                     <SelectContent>
                       <SelectItem value="quotation">Quotation</SelectItem>
                       <SelectItem value="invoice">Invoice</SelectItem>
-                      <SelectItem value="contract">Contract</SelectItem>
+                      {/* <SelectItem value="contract">Contract</SelectItem>
                       <SelectItem value="receipt">Receipt</SelectItem>
                       <SelectItem value="proposal">Proposal</SelectItem>
-                      <SelectItem value="report">Report</SelectItem>
+                      <SelectItem value="report">Report</SelectItem> */}
                     </SelectContent>
                   </Select>
                 </div>
