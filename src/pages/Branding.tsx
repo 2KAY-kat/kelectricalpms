@@ -66,17 +66,29 @@ export default function Branding() {
     try {
       // Validate input
       const validatedData = brandingSchema.parse(formData);
+      const operation = brandingId
+        ? supabase
+            .from("company_branding")
+            .update(validatedData)
+            .eq("id", brandingId)
+            .select("id")
+            .single()
+        : supabase
+            .from("company_branding")
+            .insert(validatedData)
+            .select("id")
+            .single();
 
-      const { error } = await supabase
-        .from("company_branding")
-        .update(validatedData)
-        .eq("id", brandingId!);
+      const { data, error } = await operation;
 
       setSaving(false);
 
       if (error) {
         toast.error("Failed to update branding");
       } else {
+        if (data?.id) {
+          setBrandingId(data.id);
+        }
         toast.success("Company branding updated successfully!");
       }
     } catch (error) {
