@@ -58,13 +58,15 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                 <span
                   style={{
                     position: "absolute",
-                    top: 8,
-                    right: 8,
-                    fontSize: 10,
+                    bottom: 6,
+                    right: 12,
+                    fontSize: 9,
                     color: "#000",
+                    fontWeight: "bold",
+                    letterSpacing: "0.5px",
                   }}
                 >
-                  Date: {dateStr}
+                  {dateStr}
                 </span>
               </div>
 
