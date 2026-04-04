@@ -208,7 +208,7 @@ export default function Documents() {
       pdf.setFontSize(9);
       pdf.setTextColor(0, 0, 0);
       pdf.setFont(undefined, "bold");
-      pdf.text(dateStr, pageWidth - 15, yPos + headerHeight - 3, { align: "right" });
+      pdf.text(`Date: ${dateStr}`, pageWidth - 15, yPos + headerHeight - 4, { align: "right" });
       
       yPos += headerHeight + 5;
     } catch (e) {
