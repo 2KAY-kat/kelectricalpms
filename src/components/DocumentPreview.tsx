@@ -58,9 +58,9 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                 <span
                   style={{
                     position: "absolute",
-                    bottom: 8,
-                    right: 12,
-                    fontSize: 9,
+                    top: 20,
+                    right: 8,
+                    fontSize: 14,
                     color: "#000",
                     fontWeight: "bold",
                     letterSpacing: "0.5px",
@@ -73,7 +73,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
               {/* Separator */}
               <div
                 style={{
-                  borderBottom: "1.5px solid #1e3a8a",
+                  // borderBottom: "1.5px solid #1e3a8a",
                   marginBottom: 12,
                 }}
               />
@@ -83,7 +83,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                 <span>Att: {doc.content?.attention_to || ""}</span>
                 <span
                   style={{
-                    borderBottom: "1px dotted #000",
+                    // borderBottom: "1px dotted #000",
                     display: "inline-block",
                     flex: 1,
                     width: "70%",
