@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { documentSchema } from "@/lib/validations";
 import { z } from "zod";
 import { DocumentEditor } from "@/components/DocumentEditor";
+import { DocumentPreview } from "@/components/DocumentPreview";
 import { useUserRole } from "@/hooks/useUserRole";
 import { cn } from "@/lib/utils";
 
