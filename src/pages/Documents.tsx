@@ -662,6 +662,12 @@ export default function Documents() {
         )}
       </div>
 
+      <DocumentPreview
+        doc={previewDoc}
+        open={!!previewDoc}
+        onOpenChange={(open) => !open && setPreviewDoc(null)}
+      />
+
       <AlertDialog open={!!deleteDoc} onOpenChange={() => setDeleteDoc(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
