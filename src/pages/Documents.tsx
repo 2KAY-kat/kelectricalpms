@@ -624,6 +624,13 @@ export default function Documents() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setPreviewDoc(doc)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex-1"
                     onClick={() => generatePDF(doc)}
                   >
