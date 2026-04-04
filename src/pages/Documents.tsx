@@ -29,6 +29,7 @@ export default function Documents() {
   const [open, setOpen] = useState(false);
   const [editingDoc, setEditingDoc] = useState<any>(null);
   const [deleteDoc, setDeleteDoc] = useState<any>(null);
+  const [previewDoc, setPreviewDoc] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: "",
     document_type: "quotation",
