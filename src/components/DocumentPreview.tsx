@@ -79,9 +79,9 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
               />
 
               {/* Attention To */}
-              <div style={{ marginBottom: 8, fontSize: 11 }}>
+              <div style={{ marginBottom: 12, fontSize: 12, marginTop: 24, marginLeft: 12, fontFamily: "Times New Roman", }}>
                 <span>Att: {doc.content?.attention_to || ""}</span>
-                <span
+                {/* <span
                   style={{
                     // borderBottom: "1px dotted #000",
                     display: "inline-block",
@@ -91,7 +91,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                   }}
                 >
                   &nbsp;
-                </span>
+                </span> */}
               </div>
 
               {/* Title */}
@@ -99,8 +99,9 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                 style={{
                   textAlign: "center",
                   fontWeight: "bold",
-                  fontSize: 13,
-                  marginBottom: 8,
+                  fontFamily: "Times New Roman",
+                  fontSize: 16,
+                  marginBottom: 12,
                   textTransform: "uppercase",
                 }}
               >
