@@ -181,6 +181,7 @@ export default function Documents() {
     const pageWidth = pdf.internal.pageSize.width;
     const pageHeight = pdf.internal.pageSize.height;
     let yPos = 10;
+    const isInvoice = doc.document_type === "invoice";
     let pdfFontsLoaded = false;
 
     try {
@@ -235,6 +236,14 @@ export default function Documents() {
       // Calculate aspect ratio to fit width
       const headerWidth = pageWidth - 24;
       const headerHeight = headerWidth * (headerImg.height / headerImg.width);
+      
+      if (isInvoice) {
+        pdf.setFontSize(14);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont("Times New Roman", "bold");
+        pdf.text("INVOICE", pageWidth - 70, yPos + 6, { align: "right" });
+      }
+      
       pdf.addImage(headerImg, "PNG", headerMarginX, yPos, headerWidth, headerHeight);
       
       // Overlay date on the letterhead's date placeholder (top-right of header)
@@ -429,43 +438,104 @@ export default function Documents() {
     const laborCost = formatTableAmount(doc.content?.labor_cost || 0);
     const total = formatTableAmount(doc.content?.total || 0);
 
-    pdf.setFont(centuryGothicPdfFont, "bold");
-    pdf.setFontSize(totalMaterialsFontSizePt);
-    pdf.rect(qtyX, yPos, qtyWidth, totalMaterialsRowHeight);
-    pdf.rect(descriptionX, yPos, descriptionWidth, totalMaterialsRowHeight);
-    pdf.rect(unitPriceX, yPos, unitPriceWidth, totalMaterialsRowHeight);
-    pdf.rect(kwachaX, yPos, kwachaWidth, totalMaterialsRowHeight);
-    pdf.rect(tambalaX, yPos, tambalaWidth, totalMaterialsRowHeight);
-    const totalMaterialsBaseline = rowTextBaseline(yPos, totalMaterialsRowHeight, totalMaterialsFontSizePt);
-    pdf.text("TOTAL COST OF MATERIALS", descriptionX + descriptionWidth / 2, totalMaterialsBaseline, { align: "center" });
-    pdf.text(subtotal.kwacha, kwachaX + kwachaWidth - 2.5, totalMaterialsBaseline, { align: "right" });
-    pdf.text(subtotal.tambala, tambalaX + tambalaWidth / 2, totalMaterialsBaseline, { align: "center" });
+    if (isInvoice) {
+      // Subtotal Row
+      pdf.setFillColor(15, 51, 86); // Dark Blue
+      pdf.rect(qtyX, yPos, qtyWidth + descriptionWidth + unitPriceWidth, totalMaterialsRowHeight, "F"); 
+      
+      pdf.setDrawColor(0, 0, 0);
+      pdf.rect(qtyX, yPos, qtyWidth, totalMaterialsRowHeight);
+      pdf.rect(descriptionX, yPos, descriptionWidth, totalMaterialsRowHeight);
+      pdf.rect(unitPriceX, yPos, unitPriceWidth, totalMaterialsRowHeight);
+      
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(kwachaX, yPos, kwachaWidth, totalMaterialsRowHeight, "FD");
+      pdf.rect(tambalaX, yPos, tambalaWidth, totalMaterialsRowHeight, "FD");
 
-    yPos += totalMaterialsRowHeight;
+      pdf.setFont(centuryGothicPdfFont, "bold");
+      pdf.setFontSize(itemFontSizePt);
+      pdf.setTextColor(0, 0, 0);
+      const subtotalBaseline = rowTextBaseline(yPos, totalMaterialsRowHeight, itemFontSizePt);
+      pdf.text(subtotal.kwacha, kwachaX + kwachaWidth - 2.5, subtotalBaseline, { align: "right" });
+      pdf.text(subtotal.tambala, tambalaX + tambalaWidth / 2, subtotalBaseline, { align: "center" });
 
-    pdf.setFont(centuryGothicPdfFont, "bold");
-    pdf.setFontSize(laborFontSizePt);
-    pdf.rect(qtyX, yPos, blueBandWidth, laborRowHeight);
-    pdf.rect(kwachaX, yPos, kwachaWidth, laborRowHeight);
-    pdf.rect(tambalaX, yPos, tambalaWidth, laborRowHeight);
-    const laborBaseline = rowTextBaseline(yPos, laborRowHeight, laborFontSizePt);
-    pdf.text("Labour cost and transport", qtyX + blueBandWidth / 2, laborBaseline, { align: "center" });
-    pdf.text(laborCost.kwacha, kwachaX + kwachaWidth - 2.5, laborBaseline, { align: "right" });
-    pdf.text(laborCost.tambala, tambalaX + tambalaWidth / 2, laborBaseline, { align: "center" });
+      yPos += totalMaterialsRowHeight;
 
-    yPos += laborRowHeight;
+      // Labour Row
+      pdf.setFillColor(15, 51, 86);
+      pdf.rect(qtyX, yPos, qtyWidth, laborRowHeight, "F");
+      pdf.rect(unitPriceX, yPos, unitPriceWidth, laborRowHeight, "F");
 
-    pdf.setFont(calibriPdfFont, "bold");
-    pdf.setFontSize(netTotalFontSizePt);
-    pdf.rect(qtyX, yPos, blueBandWidth, netTotalRowHeight);
-    pdf.rect(kwachaX, yPos, kwachaWidth, netTotalRowHeight);
-    pdf.rect(tambalaX, yPos, tambalaWidth, netTotalRowHeight);
-    const netTotalBaseline = rowTextBaseline(yPos, netTotalRowHeight, netTotalFontSizePt);
-    pdf.text("NET TOTAL", qtyX + blueBandWidth / 2, netTotalBaseline, { align: "center" });
-    pdf.text(total.kwacha, kwachaX + kwachaWidth - 2.5, netTotalBaseline, { align: "right" });
-    pdf.text(total.tambala, tambalaX + tambalaWidth / 2, netTotalBaseline, { align: "center" });
+      pdf.setDrawColor(0, 0, 0);
+      pdf.rect(qtyX, yPos, qtyWidth, laborRowHeight);
+      pdf.rect(unitPriceX, yPos, unitPriceWidth, laborRowHeight);
+      
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(descriptionX, yPos, descriptionWidth, laborRowHeight, "FD");
+      pdf.rect(kwachaX, yPos, kwachaWidth, laborRowHeight, "FD");
+      pdf.rect(tambalaX, yPos, tambalaWidth, laborRowHeight, "FD");
 
-    yPos += netTotalRowHeight;
+      const laborBaseline = rowTextBaseline(yPos, laborRowHeight, itemFontSizePt);
+      pdf.setFont(centuryGothicPdfFont, "bold");
+      pdf.text("Labour charge", descriptionX + descriptionWidth - 5, laborBaseline, { align: "right" });
+      pdf.text(laborCost.kwacha, kwachaX + kwachaWidth - 2.5, laborBaseline, { align: "right" });
+      pdf.text(laborCost.tambala, tambalaX + tambalaWidth / 2, laborBaseline, { align: "center" });
+
+      yPos += laborRowHeight;
+
+      // Net Total Row
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(qtyX, yPos, blueBandWidth, netTotalRowHeight, "FD");
+      pdf.rect(kwachaX, yPos, kwachaWidth, netTotalRowHeight, "FD");
+      pdf.rect(tambalaX, yPos, tambalaWidth, netTotalRowHeight, "FD");
+      
+      const netTotalBaseline = rowTextBaseline(yPos, netTotalRowHeight, netTotalFontSizePt);
+      pdf.setFont(calibriPdfFont, "bold");
+      pdf.setFontSize(netTotalFontSizePt);
+      pdf.text("NET TOTAL", qtyX + blueBandWidth / 2, netTotalBaseline, { align: "center" });
+      pdf.text(total.kwacha, kwachaX + kwachaWidth - 2.5, netTotalBaseline, { align: "right" });
+      pdf.text(total.tambala, tambalaX + tambalaWidth / 2, netTotalBaseline, { align: "center" });
+
+      yPos += netTotalRowHeight;
+    } else {
+      pdf.setFont(centuryGothicPdfFont, "bold");
+      pdf.setFontSize(totalMaterialsFontSizePt);
+      pdf.rect(qtyX, yPos, qtyWidth, totalMaterialsRowHeight);
+      pdf.rect(descriptionX, yPos, descriptionWidth, totalMaterialsRowHeight);
+      pdf.rect(unitPriceX, yPos, unitPriceWidth, totalMaterialsRowHeight);
+      pdf.rect(kwachaX, yPos, kwachaWidth, totalMaterialsRowHeight);
+      pdf.rect(tambalaX, yPos, tambalaWidth, totalMaterialsRowHeight);
+      const totalMaterialsBaseline = rowTextBaseline(yPos, totalMaterialsRowHeight, totalMaterialsFontSizePt);
+      pdf.text("TOTAL COST OF MATERIALS", descriptionX + descriptionWidth / 2, totalMaterialsBaseline, { align: "center" });
+      pdf.text(subtotal.kwacha, kwachaX + kwachaWidth - 2.5, totalMaterialsBaseline, { align: "right" });
+      pdf.text(subtotal.tambala, tambalaX + tambalaWidth / 2, totalMaterialsBaseline, { align: "center" });
+
+      yPos += totalMaterialsRowHeight;
+
+      pdf.setFont(centuryGothicPdfFont, "bold");
+      pdf.setFontSize(laborFontSizePt);
+      pdf.rect(qtyX, yPos, blueBandWidth, laborRowHeight);
+      pdf.rect(kwachaX, yPos, kwachaWidth, laborRowHeight);
+      pdf.rect(tambalaX, yPos, tambalaWidth, laborRowHeight);
+      const laborBaseline = rowTextBaseline(yPos, laborRowHeight, laborFontSizePt);
+      pdf.text("Labour cost and transport", qtyX + blueBandWidth / 2, laborBaseline, { align: "center" });
+      pdf.text(laborCost.kwacha, kwachaX + kwachaWidth - 2.5, laborBaseline, { align: "right" });
+      pdf.text(laborCost.tambala, tambalaX + tambalaWidth / 2, laborBaseline, { align: "center" });
+
+      yPos += laborRowHeight;
+
+      pdf.setFont(calibriPdfFont, "bold");
+      pdf.setFontSize(netTotalFontSizePt);
+      pdf.rect(qtyX, yPos, blueBandWidth, netTotalRowHeight);
+      pdf.rect(kwachaX, yPos, kwachaWidth, netTotalRowHeight);
+      pdf.rect(tambalaX, yPos, tambalaWidth, netTotalRowHeight);
+      const netTotalBaseline = rowTextBaseline(yPos, netTotalRowHeight, netTotalFontSizePt);
+      pdf.text("NET TOTAL", qtyX + blueBandWidth / 2, netTotalBaseline, { align: "center" });
+      pdf.text(total.kwacha, kwachaX + kwachaWidth - 2.5, netTotalBaseline, { align: "right" });
+      pdf.text(total.tambala, tambalaX + tambalaWidth / 2, netTotalBaseline, { align: "center" });
+
+      yPos += netTotalRowHeight;
+    }
 
     // Notes section (if any)
     if (doc.content?.notes) {
@@ -480,6 +550,18 @@ export default function Documents() {
       const footerBarY = pageHeight - footerBarHeight;
       const notesY = Math.max(yPos + 10, footerBarY - footerGap - notesHeight);
       pdf.text(splitNotes, qtyX, notesY);
+    }
+    
+    if (isInvoice) {
+      if (yPos > pageHeight - 40) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      yPos += 20; 
+      pdf.setFontSize(11);
+      pdf.setFont("Times New Roman", "italic");
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Authorised signature: .......................................", pageWidth - marginX - 5, yPos, { align: "right" });
     }
 
     // Orange footer bar at the page bottom border

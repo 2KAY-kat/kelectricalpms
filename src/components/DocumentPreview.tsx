@@ -22,6 +22,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
     ? new Date(doc.content.document_date)
     : new Date(doc.created_at);
   const dateStr = format(docDate, "dd/MM/yyyy");
+  const isInvoice = doc.document_type === "invoice";
 
   const minRows = 10;
   const emptyRows = Math.max(0, minRows - items.length);
@@ -115,6 +116,21 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                   alt="Header"
                   style={{ width: "100%", height: "auto" }}
                 />
+                {isInvoice && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: scaleValue(12),
+                      right: scaleValue(80),
+                      fontSize: scaleValue(18),
+                      color: "#000",
+                      fontWeight: "bold",
+                      fontFamily: '"Times New Roman", Times, serif',
+                    }}
+                  >
+                    INVOICE
+                  </span>
+                )}
                 <span
                   style={{
                     position: "absolute",
@@ -340,138 +356,85 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                       <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0 }}>00</td>
                     </tr>
                   ))}
-                  {/* Total Cost of Materials */}
-                  <tr style={{ height: scaleValue(38) }}>
-                    <td
-                      style={{
-                        ...bodyCellStyle,
-                      }}
-                    >
-                      &nbsp;
-                    </td>
-                    <td
-                      style={{
-                        ...bodyCellStyle,
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          fontFamily: centuryGothicFont,
-                          fontSize: totalMaterialsFontSize,
-                          letterSpacing: `${scaleValue(0.01)}em`,
-                        }}
-                    >
-                      TOTAL COST OF MATERIALS
-                    </td>
-                    <td
-                      style={{
-                        ...bodyCellStyle,
-                      }}
-                    >
-                      &nbsp;
-                    </td>
-                    <td
-                      style={{
-                        ...bodyCellStyle,
-                          textAlign: "right",
-                          paddingRight: scaleValue(10),
-                          fontWeight: "bold",
-                        fontFamily: centuryGothicFont,
-                        fontSize: totalMaterialsFontSize,
-                      }}
-                    >
-                      {formatAmount(subtotal).kwacha}
-                    </td>
-                    <td
-                      style={{
-                        ...bodyCellStyle,
-                        textAlign: "center",
-                        paddingLeft: 0,
-                        paddingRight: 0,
-                        fontWeight: "bold",
-                        fontFamily: centuryGothicFont,
-                        fontSize: totalMaterialsFontSize,
-                      }}
-                    >
-                      {formatAmount(subtotal).tambala}
-                    </td>
-                  </tr>
-                  <tr style={{ height: scaleValue(34) }}>
-                    <td
-                      colSpan={3}
-                      style={{
-                        ...bodyCellStyle,
-                        textAlign: "center",
-                        fontWeight: "bold",
-                        fontFamily: centuryGothicFont,
-                        fontSize: laborFontSize,
-                      }}
-                    >
-                      Labour cost and transport
-                    </td>
-                    <td
-                      style={{
-                        ...bodyCellStyle,
-                          textAlign: "right",
-                          paddingRight: scaleValue(10),
-                          fontWeight: "bold",
-                        fontFamily: centuryGothicFont,
-                        fontSize: laborFontSize,
-                      }}
-                    >
-                      {formatAmount(laborCost).kwacha}
-                    </td>
-                    <td
-                      style={{
-                        ...bodyCellStyle,
-                        textAlign: "center",
-                        paddingLeft: 0,
-                        paddingRight: 0,
-                        fontWeight: "bold",
-                        fontFamily: centuryGothicFont,
-                        fontSize: laborFontSize,
-                      }}
-                    >
-                      {formatAmount(laborCost).tambala}
-                    </td>
-                  </tr>
-                  <tr style={{ height: scaleValue(34) }}>
-                    <td
-                      colSpan={3}
-                      style={{
-                        ...bodyCellStyle,
-                        textAlign: "center",
-                        fontWeight: "bold",
-                        fontFamily: calibriFont,
-                        fontSize: netTotalFontSize,
-                      }}
-                    >
-                      NET TOTAL
-                    </td>
-                    <td
-                      style={{
-                        ...bodyCellStyle,
-                          textAlign: "right",
-                          paddingRight: scaleValue(10),
-                          fontWeight: "bold",
-                        fontFamily: calibriFont,
-                        fontSize: netTotalFontSize,
-                      }}
-                    >
-                      {formatAmount(total).kwacha}
-                    </td>
-                    <td
-                      style={{
-                        ...bodyCellStyle,
-                        textAlign: "center",
-                        paddingLeft: 0,
-                        paddingRight: 0,
-                        fontWeight: "bold",
-                        fontFamily: calibriFont,
-                        fontSize: netTotalFontSize,
-                      }}
-                    >
-                      {formatAmount(total).tambala}
-                    </td>
-                  </tr>
+                  {/* Footer Logic */}
+                  {isInvoice ? (
+                    <>
+                      <tr style={{ height: scaleValue(38) }}>
+                        <td style={{ ...bodyCellStyle, backgroundColor: tableBlue }} />
+                        <td style={{ ...bodyCellStyle, backgroundColor: tableBlue }} />
+                        <td style={{ ...bodyCellStyle, backgroundColor: tableBlue }} />
+                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold" }}>
+                          {formatAmount(subtotal).kwacha}
+                        </td>
+                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold" }}>
+                          {formatAmount(subtotal).tambala}
+                        </td>
+                      </tr>
+                      <tr style={{ height: scaleValue(34) }}>
+                        <td style={{ ...bodyCellStyle, backgroundColor: tableBlue }} />
+                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold" }}>
+                          Labour charge
+                        </td>
+                        <td style={{ ...bodyCellStyle, backgroundColor: tableBlue }} />
+                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold" }}>
+                          {formatAmount(laborCost).kwacha}
+                        </td>
+                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold" }}>
+                          {formatAmount(laborCost).tambala}
+                        </td>
+                      </tr>
+                      <tr style={{ height: scaleValue(34) }}>
+                        <td colSpan={3} style={{ ...bodyCellStyle, textAlign: "center", fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSize }}>
+                          NET TOTAL
+                        </td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSize }}>
+                          {formatAmount(total).kwacha}
+                        </td>
+                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSize }}>
+                          {formatAmount(total).tambala}
+                        </td>
+                      </tr>
+                    </>
+                  ) : (
+                    <>
+                      {/* Total Cost of Materials */}
+                      <tr style={{ height: scaleValue(38) }}>
+                        <td style={bodyCellStyle}>&nbsp;</td>
+                        <td style={{ ...bodyCellStyle, textAlign: "center", fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: totalMaterialsFontSize, letterSpacing: `${scaleValue(0.01)}em` }}>
+                          TOTAL COST OF MATERIALS
+                        </td>
+                        <td style={bodyCellStyle}>&nbsp;</td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: totalMaterialsFontSize }}>
+                          {formatAmount(subtotal).kwacha}
+                        </td>
+                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: totalMaterialsFontSize }}>
+                          {formatAmount(subtotal).tambala}
+                        </td>
+                      </tr>
+                      <tr style={{ height: scaleValue(34) }}>
+                        <td colSpan={3} style={{ ...bodyCellStyle, textAlign: "center", fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: laborFontSize }}>
+                          Labour cost and transport
+                        </td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: laborFontSize }}>
+                          {formatAmount(laborCost).kwacha}
+                        </td>
+                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: laborFontSize }}>
+                          {formatAmount(laborCost).tambala}
+                        </td>
+                      </tr>
+                      <tr style={{ height: scaleValue(34) }}>
+                        <td colSpan={3} style={{ ...bodyCellStyle, textAlign: "center", fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSize }}>
+                          NET TOTAL
+                        </td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSize }}>
+                          {formatAmount(total).kwacha}
+                        </td>
+                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSize }}>
+                          {formatAmount(total).tambala}
+                        </td>
+                      </tr>
+                    </>
+                  )}
                 </tbody>
               </table>
 
@@ -479,6 +442,13 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
               {doc.content?.notes && (
                 <div style={{ marginTop: scaleValue(12), fontSize: scaleValue(9), whiteSpace: "pre-wrap" }}>
                  * {doc.content.notes}
+                </div>
+              )}
+              
+              {/* Signature section */}
+              {isInvoice && (
+                <div style={{ marginTop: scaleValue(40), marginBottom: scaleValue(20), textAlign: "right", fontSize: scaleValue(11), fontFamily: '"Times New Roman", Times, serif', fontStyle: "italic", marginRight: scaleValue(4) }}>
+                  Authorised signature: .......................................
                 </div>
               )}
 
