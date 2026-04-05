@@ -58,8 +58,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                 <span
                   style={{
                     position: "absolute",
-                    top: 20,
-                    right: 8,
+                    top: 10,
+                    right: 4,
                     fontSize: 14,
                     color: "#000",
                     fontWeight: "bold",

@@ -46,7 +46,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 px-4 py-4">
           <Building2 className="h-6 w-6 text-sidebar-primary" />
-          <span className="font-semibold text-sidebar-foreground">EngineMS</span>
+          <span className="font-semibold text-sidebar-foreground">K E P M S</span>
         </div>
       </SidebarHeader>
       
