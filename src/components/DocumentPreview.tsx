@@ -352,8 +352,10 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                       <td style={{ ...bodyCellStyle, height: scaleValue(20) }}>&nbsp;</td>
                       <td style={bodyCellStyle}>&nbsp;</td>
                       <td style={bodyCellStyle}>&nbsp;</td>
-                      <td style={bodyCellStyle}>&nbsp;</td>
-                      <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0 }}>00</td>
+                      <td style={isInvoice ? { ...bodyCellStyle, backgroundColor: tableBlue } : bodyCellStyle}>&nbsp;</td>
+                      <td style={isInvoice ? { ...bodyCellStyle, backgroundColor: tableBlue } : { ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0 }}>
+                        {!isInvoice && "00"}
+                      </td>
                     </tr>
                   ))}
                   {/* Footer Logic */}

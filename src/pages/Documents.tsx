@@ -420,10 +420,16 @@ export default function Documents() {
       pdf.rect(qtyX, yPos, qtyWidth, rowHeight);
       pdf.rect(descriptionX, yPos, descriptionWidth, rowHeight);
       pdf.rect(unitPriceX, yPos, unitPriceWidth, rowHeight);
-      pdf.rect(kwachaX, yPos, kwachaWidth, rowHeight);
-      pdf.rect(tambalaX, yPos, tambalaWidth, rowHeight);
-
-      pdf.text("00", tambalaX + tambalaWidth / 2, rowTextBaseline(yPos, rowHeight, itemFontSizePt), { align: "center" });
+      
+      if (isInvoice) {
+        pdf.setFillColor(15, 51, 86);
+        pdf.rect(kwachaX, yPos, kwachaWidth, rowHeight, "FD");
+        pdf.rect(tambalaX, yPos, tambalaWidth, rowHeight, "FD");
+      } else {
+        pdf.rect(kwachaX, yPos, kwachaWidth, rowHeight);
+        pdf.rect(tambalaX, yPos, tambalaWidth, rowHeight);
+        pdf.text("00", tambalaX + tambalaWidth / 2, rowTextBaseline(yPos, rowHeight, itemFontSizePt), { align: "center" });
+      }
 
       yPos += rowHeight;
     }
