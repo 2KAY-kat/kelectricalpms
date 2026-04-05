@@ -467,19 +467,24 @@ export default function Documents() {
 
     yPos += netTotalRowHeight;
 
-    // Orange footer bar
-    pdf.setFillColor(245, 158, 11);
-    pdf.rect(qtyX, yPos, tableWidth, 4, "F");
-
     // Notes section (if any)
     if (doc.content?.notes) {
-      yPos += 10;
       pdf.setFontSize(9);
       pdf.setFont(undefined, "normal");
       pdf.setTextColor(0, 0, 0);
       const splitNotes = pdf.splitTextToSize(doc.content.notes, tableWidth);
-      pdf.text(splitNotes, qtyX, yPos);
+      const noteLineHeight = 4;
+      const footerBarHeight = 4;
+      const footerGap = 2;
+      const notesHeight = splitNotes.length * noteLineHeight;
+      const footerBarY = pageHeight - footerBarHeight;
+      const notesY = Math.max(yPos + 10, footerBarY - footerGap - notesHeight);
+      pdf.text(splitNotes, qtyX, notesY);
     }
+
+    // Orange footer bar at the page bottom border
+    pdf.setFillColor(245, 158, 11);
+    pdf.rect(0, pageHeight - 4, pageWidth, 4, "F");
 
     pdf.save(`${doc.title.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
     toast.success("PDF downloaded successfully!");

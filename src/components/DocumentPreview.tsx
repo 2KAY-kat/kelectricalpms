@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +12,8 @@ interface DocumentPreviewProps {
 export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProps) {
   if (!doc) return null;
 
+  const paperRef = useRef<HTMLDivElement | null>(null);
+  const [paperWidth, setPaperWidth] = useState(595);
   const items = doc.content?.items || [];
   const subtotal = doc.content?.subtotal || 0;
   const laborCost = doc.content?.labor_cost || 0;
@@ -31,20 +34,50 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
     return { kwacha: formatGroupedNumber(Number(kwacha)), tambala };
   };
 
+  useEffect(() => {
+    const node = paperRef.current;
+    if (!node || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const updateWidth = (width: number) => {
+      if (width > 0) {
+        setPaperWidth(width);
+      }
+    };
+
+    updateWidth(node.getBoundingClientRect().width);
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        updateWidth(entry.contentRect.width);
+      }
+    });
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [open]);
+
   const ptToPx = (pt: number) => (pt * 96) / 72;
+  const paperBaseWidth = 595;
+  const paperScale = Math.max(0.72, Math.min(1.28, paperWidth / paperBaseWidth));
+  const scaleValue = (value: number) => value * paperScale;
+  const pageMinHeight = Math.max(842, 842 * paperScale);
   const tableBorderColor = "#1f1f1f";
   const tableBorder = `1px solid ${tableBorderColor}`;
   const tableBlue = "#0f3358";
   const tableHeaderFont = '"Times New Roman", Times, serif';
   const centuryGothicFont = '"Century Gothic", "Trebuchet MS", Arial, sans-serif';
   const calibriFont = '"Calibri", "Segoe UI", Arial, sans-serif';
-  const itemFontSize = ptToPx(12);
-  const totalMaterialsFontSize = ptToPx(18);
-  const laborFontSize = ptToPx(16);
-  const netTotalFontSize = ptToPx(18);
+  const itemFontSize = scaleValue(ptToPx(12));
+  const totalMaterialsFontSize = scaleValue(ptToPx(18));
+  const laborFontSize = scaleValue(ptToPx(16));
+  const netTotalFontSize = scaleValue(ptToPx(18));
   const bodyCellStyle = {
     border: tableBorder,
-    padding: "5px 8px",
+    padding: `${scaleValue(5)}px ${scaleValue(8)}px`,
     fontFamily: centuryGothicFont,
     fontSize: itemFontSize,
     lineHeight: 1,
@@ -53,26 +86,30 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[700px] max-h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="w-[min(96vw,1100px)] max-w-[1100px] max-h-[92vh] p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle>Document Preview</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[80vh]">
+        <ScrollArea className="h-[84vh]">
           <div className="p-6">
             {/* A4-like paper */}
             <div
+              ref={paperRef}
               className="bg-white text-black shadow-lg mx-auto border"
               style={{
                 width: "100%",
-                maxWidth: 595,
-                minHeight: 842,
-                padding: "16px 24px",
+                maxWidth: 760,
+                minHeight: pageMinHeight,
+                padding: `${scaleValue(16)}px ${scaleValue(24)}px`,
                 fontFamily: "Arial, Helvetica, sans-serif",
-                fontSize: 11,
+                fontSize: scaleValue(11),
+                display: "flex",
+                flexDirection: "column",
               }}
             >
+              <div>
               {/* Header image */}
-              <div style={{ position: "relative", marginBottom: 4 }}>
+              <div style={{ position: "relative", marginBottom: scaleValue(4) }}>
                 <img
                   src="/images/pdf-header.png"
                   alt="Header"
@@ -81,12 +118,12 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                 <span
                   style={{
                     position: "absolute",
-                    top: 10,
-                    right: 4,
-                    fontSize: 14,
+                    top: scaleValue(10),
+                    right: scaleValue(4),
+                    fontSize: scaleValue(14),
                     color: "#000",
                     fontWeight: "bold",
-                    letterSpacing: "0.5px",
+                    letterSpacing: `${scaleValue(0.5)}px`,
                   }}
                 >
                   Date: {dateStr}
@@ -97,12 +134,12 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
               <div
                 style={{
                   // borderBottom: "1.5px solid #1e3a8a",
-                  marginBottom: 12,
+                  marginBottom: scaleValue(12),
                 }}
               />
 
               {/* Attention To */}
-              <div style={{ marginBottom: 12, fontSize: 12, marginTop: 24, marginLeft: 12, fontFamily: "Times New Roman", }}>
+              <div style={{ marginBottom: scaleValue(12), fontSize: scaleValue(12), marginTop: scaleValue(24), marginLeft: scaleValue(12), fontFamily: "Times New Roman", }}>
                 <span>Att: {doc.content?.attention_to || ""}</span>
                 {/* <span
                   style={{
@@ -123,8 +160,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                   textAlign: "center",
                   fontWeight: "bold",
                   fontFamily: "Times New Roman",
-                  fontSize: 16,
-                  marginBottom: 12,
+                  fontSize: scaleValue(16),
+                  marginBottom: scaleValue(12),
                   textTransform: "uppercase",
                 }}
               >
@@ -137,8 +174,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                   width: "100%",
                   borderCollapse: "collapse",
                   tableLayout: "fixed",
-                  fontSize: 10,
-                  marginTop: 2,
+                  fontSize: scaleValue(10),
+                  marginTop: scaleValue(2),
                 }}
               >
                 <colgroup>
@@ -154,10 +191,10 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                     <th
                       style={{
                         border: tableBorder,
-                        padding: "7px 4px 5px",
+                        padding: `${scaleValue(7)}px ${scaleValue(4)}px ${scaleValue(5)}px`,
                         fontWeight: "bold",
                         fontFamily: tableHeaderFont,
-                        fontSize: 14,
+                        fontSize: scaleValue(14),
                         lineHeight: 1,
                       }}
                     >
@@ -166,10 +203,10 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                     <th
                       style={{
                         border: tableBorder,
-                        padding: "7px 4px 5px",
+                        padding: `${scaleValue(7)}px ${scaleValue(4)}px ${scaleValue(5)}px`,
                         fontWeight: "bold",
                         fontFamily: tableHeaderFont,
-                        fontSize: 14,
+                        fontSize: scaleValue(14),
                         lineHeight: 1,
                       }}
                     >
@@ -178,10 +215,10 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                     <th
                       style={{
                         border: tableBorder,
-                        padding: "7px 4px 5px",
+                        padding: `${scaleValue(7)}px ${scaleValue(4)}px ${scaleValue(5)}px`,
                         fontWeight: "bold",
                         fontFamily: tableHeaderFont,
-                        fontSize: 14,
+                        fontSize: scaleValue(14),
                         fontStyle: "italic",
                         lineHeight: 1,
                       }}
@@ -192,11 +229,11 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                       colSpan={2}
                       style={{
                         border: tableBorder,
-                        padding: "7px 4px 5px",
+                        padding: `${scaleValue(7)}px ${scaleValue(4)}px ${scaleValue(5)}px`,
                         fontWeight: "bold",
                         textAlign: "center",
                         fontFamily: tableHeaderFont,
-                        fontSize: 14,
+                        fontSize: scaleValue(14),
                         lineHeight: 1,
                       }}
                     >
@@ -208,17 +245,17 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                       colSpan={3}
                       style={{
                         border: tableBorder,
-                        padding: "7px 0",
+                        padding: `${scaleValue(7)}px 0`,
                         backgroundColor: tableBlue,
                       }}
                     ></th>
                     <th
                       style={{
                         border: tableBorder,
-                        padding: "5px 2px",
+                        padding: `${scaleValue(5)}px ${scaleValue(2)}px`,
                         textAlign: "center",
                         fontFamily: tableHeaderFont,
-                        fontSize: 12,
+                        fontSize: scaleValue(12),
                         fontStyle: "italic",
                         lineHeight: 1,
                       }}
@@ -228,10 +265,10 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                     <th
                       style={{
                         border: tableBorder,
-                        padding: "5px 2px",
+                        padding: `${scaleValue(5)}px ${scaleValue(2)}px`,
                         textAlign: "center",
                         fontFamily: tableHeaderFont,
-                        fontSize: 12,
+                        fontSize: scaleValue(12),
                         fontStyle: "italic",
                         lineHeight: 1,
                       }}
@@ -256,6 +293,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         <td
                           style={{
                             ...bodyCellStyle,
+                            overflowWrap: "anywhere",
+                            wordBreak: "break-word",
                           }}
                         >
                           {item.description}
@@ -264,7 +303,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                           style={{
                             ...bodyCellStyle,
                             textAlign: "right",
-                            paddingRight: 10,
+                            paddingRight: scaleValue(10),
                           }}
                         >
                           {formatGroupedNumber(item.unit_price || 0)}
@@ -273,7 +312,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                           style={{
                             ...bodyCellStyle,
                             textAlign: "right",
-                            paddingRight: 10,
+                            paddingRight: scaleValue(10),
                           }}
                         >
                           {kwacha}
@@ -294,7 +333,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                   {/* Empty rows */}
                   {Array.from({ length: emptyRows }).map((_, idx) => (
                     <tr key={`empty-${idx}`}>
-                      <td style={{ ...bodyCellStyle, height: 20 }}>&nbsp;</td>
+                      <td style={{ ...bodyCellStyle, height: scaleValue(20) }}>&nbsp;</td>
                       <td style={bodyCellStyle}>&nbsp;</td>
                       <td style={bodyCellStyle}>&nbsp;</td>
                       <td style={bodyCellStyle}>&nbsp;</td>
@@ -302,7 +341,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                     </tr>
                   ))}
                   {/* Total Cost of Materials */}
-                  <tr style={{ height: 38 }}>
+                  <tr style={{ height: scaleValue(38) }}>
                     <td
                       style={{
                         ...bodyCellStyle,
@@ -313,12 +352,12 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                     <td
                       style={{
                         ...bodyCellStyle,
-                        textAlign: "center",
-                        fontWeight: "bold",
-                        fontFamily: centuryGothicFont,
-                        fontSize: totalMaterialsFontSize,
-                        letterSpacing: "0.01em",
-                      }}
+                          textAlign: "center",
+                          fontWeight: "bold",
+                          fontFamily: centuryGothicFont,
+                          fontSize: totalMaterialsFontSize,
+                          letterSpacing: `${scaleValue(0.01)}em`,
+                        }}
                     >
                       TOTAL COST OF MATERIALS
                     </td>
@@ -332,9 +371,9 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                     <td
                       style={{
                         ...bodyCellStyle,
-                        textAlign: "right",
-                        paddingRight: 10,
-                        fontWeight: "bold",
+                          textAlign: "right",
+                          paddingRight: scaleValue(10),
+                          fontWeight: "bold",
                         fontFamily: centuryGothicFont,
                         fontSize: totalMaterialsFontSize,
                       }}
@@ -355,7 +394,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                       {formatAmount(subtotal).tambala}
                     </td>
                   </tr>
-                  <tr style={{ height: 34 }}>
+                  <tr style={{ height: scaleValue(34) }}>
                     <td
                       colSpan={3}
                       style={{
@@ -371,9 +410,9 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                     <td
                       style={{
                         ...bodyCellStyle,
-                        textAlign: "right",
-                        paddingRight: 10,
-                        fontWeight: "bold",
+                          textAlign: "right",
+                          paddingRight: scaleValue(10),
+                          fontWeight: "bold",
                         fontFamily: centuryGothicFont,
                         fontSize: laborFontSize,
                       }}
@@ -394,7 +433,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                       {formatAmount(laborCost).tambala}
                     </td>
                   </tr>
-                  <tr style={{ height: 34 }}>
+                  <tr style={{ height: scaleValue(34) }}>
                     <td
                       colSpan={3}
                       style={{
@@ -410,9 +449,9 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                     <td
                       style={{
                         ...bodyCellStyle,
-                        textAlign: "right",
-                        paddingRight: 10,
-                        fontWeight: "bold",
+                          textAlign: "right",
+                          paddingRight: scaleValue(10),
+                          fontWeight: "bold",
                         fontFamily: calibriFont,
                         fontSize: netTotalFontSize,
                       }}
@@ -436,21 +475,26 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                 </tbody>
               </table>
 
-              {/* Orange footer bar */}
-              <div
-                style={{
-                  height: 6,
-                  backgroundColor: "#f59e0b",
-                  width: "100%",
-                }}
-              />
-
               {/* Notes */}
               {doc.content?.notes && (
-                <div style={{ marginTop: 12, fontSize: 9, whiteSpace: "pre-wrap" }}>
+                <div style={{ marginTop: scaleValue(12), fontSize: scaleValue(9), whiteSpace: "pre-wrap" }}>
                   {doc.content.notes}
                 </div>
               )}
+
+              </div>
+
+              {/* Orange footer bar */}
+              <div
+                style={{
+                  height: scaleValue(6),
+                  backgroundColor: "#f59e0b",
+                  marginTop: "auto",
+                  marginLeft: `-${scaleValue(24)}px`,
+                  marginRight: `-${scaleValue(24)}px`,
+                  marginBottom: `-${scaleValue(16)}px`,
+                }}
+              />
             </div>
           </div>
         </ScrollArea>
