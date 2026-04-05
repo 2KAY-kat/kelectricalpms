@@ -31,17 +31,23 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
     return { kwacha: formatGroupedNumber(Number(kwacha)), tambala };
   };
 
+  const ptToPx = (pt: number) => (pt * 96) / 72;
   const tableBorderColor = "#1f1f1f";
   const tableBorder = `1px solid ${tableBorderColor}`;
   const tableBlue = "#0f3358";
   const tableHeaderFont = '"Times New Roman", Times, serif';
-  const tableBodyFont = '"Century Gothic", "Trebuchet MS", Arial, sans-serif';
+  const centuryGothicFont = '"Century Gothic", "Trebuchet MS", Arial, sans-serif';
+  const calibriFont = '"Calibri", "Segoe UI", Arial, sans-serif';
+  const itemFontSize = ptToPx(12);
+  const totalMaterialsFontSize = ptToPx(18);
+  const laborFontSize = ptToPx(16);
+  const netTotalFontSize = ptToPx(18);
   const bodyCellStyle = {
     border: tableBorder,
     padding: "5px 8px",
-    fontFamily: tableBodyFont,
-    fontSize: 9.5,
-    lineHeight: 1.1,
+    fontFamily: centuryGothicFont,
+    fontSize: itemFontSize,
+    lineHeight: 1,
     verticalAlign: "middle" as const,
   };
 
@@ -309,7 +315,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         ...bodyCellStyle,
                         textAlign: "center",
                         fontWeight: "bold",
-                        fontSize: 11,
+                        fontFamily: centuryGothicFont,
+                        fontSize: totalMaterialsFontSize,
                         letterSpacing: "0.01em",
                       }}
                     >
@@ -328,7 +335,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         textAlign: "right",
                         paddingRight: 10,
                         fontWeight: "bold",
-                        fontSize: 11,
+                        fontFamily: centuryGothicFont,
+                        fontSize: totalMaterialsFontSize,
                       }}
                     >
                       {formatAmount(subtotal).kwacha}
@@ -340,7 +348,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         paddingLeft: 0,
                         paddingRight: 0,
                         fontWeight: "bold",
-                        fontSize: 11,
+                        fontFamily: centuryGothicFont,
+                        fontSize: totalMaterialsFontSize,
                       }}
                     >
                       {formatAmount(subtotal).tambala}
@@ -353,7 +362,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         ...bodyCellStyle,
                         textAlign: "center",
                         fontWeight: "bold",
-                        fontSize: 11,
+                        fontFamily: centuryGothicFont,
+                        fontSize: laborFontSize,
                       }}
                     >
                       Labour cost and transport
@@ -364,7 +374,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         textAlign: "right",
                         paddingRight: 10,
                         fontWeight: "bold",
-                        fontSize: 11,
+                        fontFamily: centuryGothicFont,
+                        fontSize: laborFontSize,
                       }}
                     >
                       {formatAmount(laborCost).kwacha}
@@ -376,7 +387,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         paddingLeft: 0,
                         paddingRight: 0,
                         fontWeight: "bold",
-                        fontSize: 11,
+                        fontFamily: centuryGothicFont,
+                        fontSize: laborFontSize,
                       }}
                     >
                       {formatAmount(laborCost).tambala}
@@ -389,7 +401,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         ...bodyCellStyle,
                         textAlign: "center",
                         fontWeight: "bold",
-                        fontSize: 11,
+                        fontFamily: calibriFont,
+                        fontSize: netTotalFontSize,
                       }}
                     >
                       NET TOTAL
@@ -400,7 +413,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         textAlign: "right",
                         paddingRight: 10,
                         fontWeight: "bold",
-                        fontSize: 11,
+                        fontFamily: calibriFont,
+                        fontSize: netTotalFontSize,
                       }}
                     >
                       {formatAmount(total).kwacha}
@@ -412,7 +426,8 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         paddingLeft: 0,
                         paddingRight: 0,
                         fontWeight: "bold",
-                        fontSize: 11,
+                        fontFamily: calibriFont,
+                        fontSize: netTotalFontSize,
                       }}
                     >
                       {formatAmount(total).tambala}

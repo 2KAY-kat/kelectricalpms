@@ -18,6 +18,7 @@ import { z } from "zod";
 import { DocumentEditor } from "@/components/DocumentEditor";
 import { DocumentPreview } from "@/components/DocumentPreview";
 import { useUserRole } from "@/hooks/useUserRole";
+import { ensurePdfFonts, PDF_FONT_FAMILIES } from "@/lib/pdfFonts";
 import { cn } from "@/lib/utils";
 
 export default function Documents() {
@@ -180,6 +181,14 @@ export default function Documents() {
     const pageWidth = pdf.internal.pageSize.width;
     const pageHeight = pdf.internal.pageSize.height;
     let yPos = 10;
+    let pdfFontsLoaded = false;
+
+    try {
+      await ensurePdfFonts(pdf);
+      pdfFontsLoaded = true;
+    } catch (error) {
+      console.error("Could not load custom PDF fonts", error);
+    }
 
     // Load header image
     const loadImage = (src: string): Promise<HTMLImageElement> => {
@@ -197,7 +206,10 @@ export default function Documents() {
     const dateStr = format(docDate, "dd/MM/yyyy");
     const pxToMm = (px: number) => (px * 25.4) / 96;
     const pxToPt = (px: number) => (px * 72) / 96;
+    const ptToMm = (pt: number) => (pt * 25.4) / 72;
     const fontBaselineMm = (fontSizePx: number) => pxToMm(fontSizePx * 0.8);
+    const rowTextBaseline = (rowTop: number, rowHeight: number, fontSizePt: number) =>
+      rowTop + rowHeight / 2 + ptToMm(fontSizePt) * 0.25;
     const headerMarginX = 12;
     const attentionFontPx = 12;
     const titleFontPx = 16;
@@ -214,6 +226,8 @@ export default function Documents() {
         tambala,
       };
     };
+    const centuryGothicPdfFont = pdfFontsLoaded ? PDF_FONT_FAMILIES.centuryGothic : "helvetica";
+    const calibriPdfFont = pdfFontsLoaded ? PDF_FONT_FAMILIES.calibri : "helvetica";
 
     try {
       // Use the exact header image for consistency
@@ -307,8 +321,13 @@ export default function Documents() {
     const amountRowHeight = 7;
     const rowHeight = 8;
     const totalMaterialsRowHeight = 10;
-    const summaryRowHeight = 9;
+    const laborRowHeight = 9;
+    const netTotalRowHeight = 9;
     const blueBandWidth = unitPriceX + unitPriceWidth - qtyX;
+    const itemFontSizePt = 12;
+    const totalMaterialsFontSizePt = 18;
+    const laborFontSizePt = 16;
+    const netTotalFontSizePt = 18;
 
     const drawTableHeader = () => {
       pdf.setDrawColor(31, 31, 31);
@@ -343,8 +362,8 @@ export default function Documents() {
 
       yPos += amountRowHeight;
 
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(10.5);
+      pdf.setFont(centuryGothicPdfFont, "normal");
+      pdf.setFontSize(itemFontSizePt);
     };
 
     drawTableHeader();
@@ -366,16 +385,18 @@ export default function Documents() {
       pdf.rect(kwachaX, yPos, kwachaWidth, rowHeight);
       pdf.rect(tambalaX, yPos, tambalaWidth, rowHeight);
 
-      pdf.text(String(item.qty ?? ""), qtyX + qtyWidth / 2, yPos + 5.5, { align: "center" });
+      const itemTextBaseline = rowTextBaseline(yPos, rowHeight, itemFontSizePt);
+
+      pdf.text(String(item.qty ?? ""), qtyX + qtyWidth / 2, itemTextBaseline, { align: "center" });
 
       const descLines = pdf.splitTextToSize(String(item.description || ""), descriptionWidth - 4);
-      pdf.text(descLines[0] || "", descriptionX + 2, yPos + 5.5);
+      pdf.text(descLines[0] || "", descriptionX + 2, itemTextBaseline);
 
-      pdf.text(formatGroupedNumber(Number(item.unit_price || 0)), unitPriceX + unitPriceWidth - 2.5, yPos + 5.5, {
+      pdf.text(formatGroupedNumber(Number(item.unit_price || 0)), unitPriceX + unitPriceWidth - 2.5, itemTextBaseline, {
         align: "right",
       });
-      pdf.text(formattedAmount.kwacha, kwachaX + kwachaWidth - 2.5, yPos + 5.5, { align: "right" });
-      pdf.text(formattedAmount.tambala, tambalaX + tambalaWidth / 2, yPos + 5.5, { align: "center" });
+      pdf.text(formattedAmount.kwacha, kwachaX + kwachaWidth - 2.5, itemTextBaseline, { align: "right" });
+      pdf.text(formattedAmount.tambala, tambalaX + tambalaWidth / 2, itemTextBaseline, { align: "center" });
 
       yPos += rowHeight;
     });
@@ -393,7 +414,7 @@ export default function Documents() {
       pdf.rect(kwachaX, yPos, kwachaWidth, rowHeight);
       pdf.rect(tambalaX, yPos, tambalaWidth, rowHeight);
 
-      pdf.text("00", tambalaX + tambalaWidth / 2, yPos + 5.5, { align: "center" });
+      pdf.text("00", tambalaX + tambalaWidth / 2, rowTextBaseline(yPos, rowHeight, itemFontSizePt), { align: "center" });
 
       yPos += rowHeight;
     }
@@ -408,38 +429,43 @@ export default function Documents() {
     const laborCost = formatTableAmount(doc.content?.labor_cost || 0);
     const total = formatTableAmount(doc.content?.total || 0);
 
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(13);
+    pdf.setFont(centuryGothicPdfFont, "bold");
+    pdf.setFontSize(totalMaterialsFontSizePt);
     pdf.rect(qtyX, yPos, qtyWidth, totalMaterialsRowHeight);
     pdf.rect(descriptionX, yPos, descriptionWidth, totalMaterialsRowHeight);
     pdf.rect(unitPriceX, yPos, unitPriceWidth, totalMaterialsRowHeight);
     pdf.rect(kwachaX, yPos, kwachaWidth, totalMaterialsRowHeight);
     pdf.rect(tambalaX, yPos, tambalaWidth, totalMaterialsRowHeight);
-    pdf.text("TOTAL COST OF MATERIALS", descriptionX + descriptionWidth / 2, yPos + 6.8, { align: "center" });
-    pdf.text(subtotal.kwacha, kwachaX + kwachaWidth - 2.5, yPos + 6.8, { align: "right" });
-    pdf.text(subtotal.tambala, tambalaX + tambalaWidth / 2, yPos + 6.8, { align: "center" });
+    const totalMaterialsBaseline = rowTextBaseline(yPos, totalMaterialsRowHeight, totalMaterialsFontSizePt);
+    pdf.text("TOTAL COST OF MATERIALS", descriptionX + descriptionWidth / 2, totalMaterialsBaseline, { align: "center" });
+    pdf.text(subtotal.kwacha, kwachaX + kwachaWidth - 2.5, totalMaterialsBaseline, { align: "right" });
+    pdf.text(subtotal.tambala, tambalaX + tambalaWidth / 2, totalMaterialsBaseline, { align: "center" });
 
     yPos += totalMaterialsRowHeight;
 
-    pdf.setFontSize(12);
-    pdf.rect(qtyX, yPos, blueBandWidth, summaryRowHeight);
-    pdf.rect(kwachaX, yPos, kwachaWidth, summaryRowHeight);
-    pdf.rect(tambalaX, yPos, tambalaWidth, summaryRowHeight);
-    pdf.text("Labour cost and transport", qtyX + blueBandWidth / 2, yPos + 6, { align: "center" });
-    pdf.text(laborCost.kwacha, kwachaX + kwachaWidth - 2.5, yPos + 6, { align: "right" });
-    pdf.text(laborCost.tambala, tambalaX + tambalaWidth / 2, yPos + 6, { align: "center" });
+    pdf.setFont(centuryGothicPdfFont, "bold");
+    pdf.setFontSize(laborFontSizePt);
+    pdf.rect(qtyX, yPos, blueBandWidth, laborRowHeight);
+    pdf.rect(kwachaX, yPos, kwachaWidth, laborRowHeight);
+    pdf.rect(tambalaX, yPos, tambalaWidth, laborRowHeight);
+    const laborBaseline = rowTextBaseline(yPos, laborRowHeight, laborFontSizePt);
+    pdf.text("Labour cost and transport", qtyX + blueBandWidth / 2, laborBaseline, { align: "center" });
+    pdf.text(laborCost.kwacha, kwachaX + kwachaWidth - 2.5, laborBaseline, { align: "right" });
+    pdf.text(laborCost.tambala, tambalaX + tambalaWidth / 2, laborBaseline, { align: "center" });
 
-    yPos += summaryRowHeight;
+    yPos += laborRowHeight;
 
-    pdf.setFontSize(12.5);
-    pdf.rect(qtyX, yPos, blueBandWidth, summaryRowHeight);
-    pdf.rect(kwachaX, yPos, kwachaWidth, summaryRowHeight);
-    pdf.rect(tambalaX, yPos, tambalaWidth, summaryRowHeight);
-    pdf.text("NET TOTAL", qtyX + blueBandWidth / 2, yPos + 6, { align: "center" });
-    pdf.text(total.kwacha, kwachaX + kwachaWidth - 2.5, yPos + 6, { align: "right" });
-    pdf.text(total.tambala, tambalaX + tambalaWidth / 2, yPos + 6, { align: "center" });
+    pdf.setFont(calibriPdfFont, "bold");
+    pdf.setFontSize(netTotalFontSizePt);
+    pdf.rect(qtyX, yPos, blueBandWidth, netTotalRowHeight);
+    pdf.rect(kwachaX, yPos, kwachaWidth, netTotalRowHeight);
+    pdf.rect(tambalaX, yPos, tambalaWidth, netTotalRowHeight);
+    const netTotalBaseline = rowTextBaseline(yPos, netTotalRowHeight, netTotalFontSizePt);
+    pdf.text("NET TOTAL", qtyX + blueBandWidth / 2, netTotalBaseline, { align: "center" });
+    pdf.text(total.kwacha, kwachaX + kwachaWidth - 2.5, netTotalBaseline, { align: "right" });
+    pdf.text(total.tambala, tambalaX + tambalaWidth / 2, netTotalBaseline, { align: "center" });
 
-    yPos += summaryRowHeight;
+    yPos += netTotalRowHeight;
 
     // Orange footer bar
     pdf.setFillColor(245, 158, 11);
