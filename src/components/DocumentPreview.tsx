@@ -23,9 +23,26 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
   const minRows = 10;
   const emptyRows = Math.max(0, minRows - items.length);
 
+  const formatGroupedNumber = (value: number) =>
+    Number(value || 0).toLocaleString("en-US").replace(/,/g, ", ");
+
   const formatAmount = (amount: number) => {
     const [kwacha, tambala] = amount.toFixed(2).split(".");
-    return { kwacha: Number(kwacha).toLocaleString(), tambala };
+    return { kwacha: formatGroupedNumber(Number(kwacha)), tambala };
+  };
+
+  const tableBorderColor = "#1f1f1f";
+  const tableBorder = `1px solid ${tableBorderColor}`;
+  const tableBlue = "#0f3358";
+  const tableHeaderFont = '"Times New Roman", Times, serif';
+  const tableBodyFont = '"Century Gothic", "Trebuchet MS", Arial, sans-serif';
+  const bodyCellStyle = {
+    border: tableBorder,
+    padding: "5px 8px",
+    fontFamily: tableBodyFont,
+    fontSize: 9.5,
+    lineHeight: 1.1,
+    verticalAlign: "middle" as const,
   };
 
   return (
@@ -113,37 +130,54 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                 style={{
                   width: "100%",
                   borderCollapse: "collapse",
+                  tableLayout: "fixed",
                   fontSize: 10,
+                  marginTop: 2,
                 }}
               >
+                <colgroup>
+                  <col style={{ width: "10.5%" }} />
+                  <col style={{ width: "52%" }} />
+                  <col style={{ width: "11%" }} />
+                  <col style={{ width: "22.5%" }} />
+                  <col style={{ width: "4%" }} />
+                </colgroup>
                 {/* Header Row 1 */}
                 <thead>
                   <tr>
                     <th
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px 2px",
-                        width: 40,
+                        border: tableBorder,
+                        padding: "7px 4px 5px",
                         fontWeight: "bold",
+                        fontFamily: tableHeaderFont,
+                        fontSize: 14,
+                        lineHeight: 1,
                       }}
                     >
                       QTY
                     </th>
                     <th
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px 2px",
+                        border: tableBorder,
+                        padding: "7px 4px 5px",
                         fontWeight: "bold",
+                        fontFamily: tableHeaderFont,
+                        fontSize: 14,
+                        lineHeight: 1,
                       }}
                     >
                       DESCRIPTION
                     </th>
                     <th
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px 2px",
-                        width: 40,
+                        border: tableBorder,
+                        padding: "7px 4px 5px",
                         fontWeight: "bold",
+                        fontFamily: tableHeaderFont,
+                        fontSize: 14,
+                        fontStyle: "italic",
+                        lineHeight: 1,
                       }}
                     >
                       @
@@ -151,37 +185,49 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                     <th
                       colSpan={2}
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px 2px",
-                        width: 100,
+                        border: tableBorder,
+                        padding: "7px 4px 5px",
                         fontWeight: "bold",
                         textAlign: "center",
+                        fontFamily: tableHeaderFont,
+                        fontSize: 14,
+                        lineHeight: 1,
                       }}
                     >
                       AMOUNT
                     </th>
                   </tr>
-                  {/* Header Row 2 - Blue */}
-                  <tr style={{ backgroundColor: "#1e3a8a", color: "#fff" }}>
-                    <th style={{ border: "1px solid #1e3a8a", padding: "3px 2px" }}></th>
-                    <th style={{ border: "1px solid #1e3a8a", padding: "3px 2px" }}></th>
-                    <th style={{ border: "1px solid #1e3a8a", padding: "3px 2px" }}></th>
+                  <tr>
+                    <th
+                      colSpan={3}
+                      style={{
+                        border: tableBorder,
+                        padding: "7px 0",
+                        backgroundColor: tableBlue,
+                      }}
+                    ></th>
                     <th
                       style={{
-                        border: "1px solid #fff",
-                        padding: "3px 2px",
+                        border: tableBorder,
+                        padding: "5px 2px",
                         textAlign: "center",
-                        width: 50,
+                        fontFamily: tableHeaderFont,
+                        fontSize: 12,
+                        fontStyle: "italic",
+                        lineHeight: 1,
                       }}
                     >
                       K
                     </th>
                     <th
                       style={{
-                        border: "1px solid #fff",
-                        padding: "3px 2px",
+                        border: tableBorder,
+                        padding: "5px 2px",
                         textAlign: "center",
-                        width: 50,
+                        fontFamily: tableHeaderFont,
+                        fontSize: 12,
+                        fontStyle: "italic",
+                        lineHeight: 1,
                       }}
                     >
                       t
@@ -195,8 +241,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                       <tr key={idx}>
                         <td
                           style={{
-                            border: "1px solid #000",
-                            padding: "3px 4px",
+                            ...bodyCellStyle,
                             textAlign: "center",
                           }}
                         >
@@ -204,35 +249,35 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                         </td>
                         <td
                           style={{
-                            border: "1px solid #000",
-                            padding: "3px 4px",
+                            ...bodyCellStyle,
                           }}
                         >
                           {item.description}
                         </td>
                         <td
                           style={{
-                            border: "1px solid #000",
-                            padding: "3px 4px",
+                            ...bodyCellStyle,
                             textAlign: "right",
+                            paddingRight: 10,
                           }}
                         >
-                          {item.unit_price?.toLocaleString()}
+                          {formatGroupedNumber(item.unit_price || 0)}
                         </td>
                         <td
                           style={{
-                            border: "1px solid #000",
-                            padding: "3px 4px",
+                            ...bodyCellStyle,
                             textAlign: "right",
+                            paddingRight: 10,
                           }}
                         >
                           {kwacha}
                         </td>
                         <td
                           style={{
-                            border: "1px solid #000",
-                            padding: "3px 4px",
+                            ...bodyCellStyle,
                             textAlign: "center",
+                            paddingLeft: 0,
+                            paddingRight: 0,
                           }}
                         >
                           {tambala}
@@ -243,98 +288,131 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                   {/* Empty rows */}
                   {Array.from({ length: emptyRows }).map((_, idx) => (
                     <tr key={`empty-${idx}`}>
-                      <td style={{ border: "1px solid #000", padding: "3px 4px", height: 20 }}>&nbsp;</td>
-                      <td style={{ border: "1px solid #000", padding: "3px 4px" }}>&nbsp;</td>
-                      <td style={{ border: "1px solid #000", padding: "3px 4px" }}>&nbsp;</td>
-                      <td style={{ border: "1px solid #000", padding: "3px 4px" }}>&nbsp;</td>
-                      <td style={{ border: "1px solid #000", padding: "3px 4px", textAlign: "center" }}>00</td>
+                      <td style={{ ...bodyCellStyle, height: 20 }}>&nbsp;</td>
+                      <td style={bodyCellStyle}>&nbsp;</td>
+                      <td style={bodyCellStyle}>&nbsp;</td>
+                      <td style={bodyCellStyle}>&nbsp;</td>
+                      <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0 }}>00</td>
                     </tr>
                   ))}
                   {/* Total Cost of Materials */}
-                  <tr style={{ fontWeight: "bold" }}>
+                  <tr style={{ height: 38 }}>
                     <td
-                      colSpan={3}
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px",
+                        ...bodyCellStyle,
+                      }}
+                    >
+                      &nbsp;
+                    </td>
+                    <td
+                      style={{
+                        ...bodyCellStyle,
+                        textAlign: "center",
+                        fontWeight: "bold",
+                        fontSize: 11,
+                        letterSpacing: "0.01em",
                       }}
                     >
                       TOTAL COST OF MATERIALS
                     </td>
                     <td
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px",
+                        ...bodyCellStyle,
+                      }}
+                    >
+                      &nbsp;
+                    </td>
+                    <td
+                      style={{
+                        ...bodyCellStyle,
                         textAlign: "right",
+                        paddingRight: 10,
+                        fontWeight: "bold",
+                        fontSize: 11,
                       }}
                     >
                       {formatAmount(subtotal).kwacha}
                     </td>
                     <td
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px",
+                        ...bodyCellStyle,
                         textAlign: "center",
+                        paddingLeft: 0,
+                        paddingRight: 0,
+                        fontWeight: "bold",
+                        fontSize: 11,
                       }}
                     >
                       {formatAmount(subtotal).tambala}
                     </td>
                   </tr>
-                  {/* Labour */}
-                  <tr style={{ fontStyle: "italic", fontWeight: "bold" }}>
+                  <tr style={{ height: 34 }}>
                     <td
                       colSpan={3}
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px",
+                        ...bodyCellStyle,
+                        textAlign: "center",
+                        fontWeight: "bold",
+                        fontSize: 11,
                       }}
                     >
                       Labour cost and transport
                     </td>
                     <td
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px",
+                        ...bodyCellStyle,
                         textAlign: "right",
+                        paddingRight: 10,
+                        fontWeight: "bold",
+                        fontSize: 11,
                       }}
                     >
                       {formatAmount(laborCost).kwacha}
                     </td>
                     <td
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px",
+                        ...bodyCellStyle,
                         textAlign: "center",
+                        paddingLeft: 0,
+                        paddingRight: 0,
+                        fontWeight: "bold",
+                        fontSize: 11,
                       }}
                     >
                       {formatAmount(laborCost).tambala}
                     </td>
                   </tr>
-                  {/* Net Total */}
-                  <tr style={{ fontWeight: "bold", fontSize: 12 }}>
+                  <tr style={{ height: 34 }}>
                     <td
                       colSpan={3}
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px",
+                        ...bodyCellStyle,
+                        textAlign: "center",
+                        fontWeight: "bold",
+                        fontSize: 11,
                       }}
                     >
                       NET TOTAL
                     </td>
                     <td
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px",
+                        ...bodyCellStyle,
                         textAlign: "right",
+                        paddingRight: 10,
+                        fontWeight: "bold",
+                        fontSize: 11,
                       }}
                     >
                       {formatAmount(total).kwacha}
                     </td>
                     <td
                       style={{
-                        border: "1px solid #000",
-                        padding: "4px",
+                        ...bodyCellStyle,
                         textAlign: "center",
+                        paddingLeft: 0,
+                        paddingRight: 0,
+                        fontWeight: "bold",
+                        fontSize: 11,
                       }}
                     >
                       {formatAmount(total).tambala}

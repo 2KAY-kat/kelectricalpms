@@ -206,6 +206,14 @@ export default function Documents() {
     const previewSectionGapPx = 12;
     const previewAttentionTopPx = 24;
     const previewAttentionIndentPx = 12;
+    const formatGroupedNumber = (value: number) => Number(value || 0).toLocaleString("en-US").replace(/,/g, ", ");
+    const formatTableAmount = (amount: number) => {
+      const [kwacha, tambala] = amount.toFixed(2).split(".");
+      return {
+        kwacha: formatGroupedNumber(Number(kwacha)),
+        tambala,
+      };
+    };
 
     try {
       // Use the exact header image for consistency
@@ -280,168 +288,162 @@ export default function Documents() {
     pdf.text(doc.title.toUpperCase(), pageWidth / 2, titleBaselineY, { align: "center" });
     yPos = titleTopY + pxToMm(titleLineHeightPx + previewSectionGapPx);
 
-    // Table structure matching template exactly
+    // Table structure matching the approved reference layout
     const marginX = 12;
     const tableWidth = pageWidth - (marginX * 2);
-    const col1Width = 25;  // QTY
-    const col2Width = 95;  // DESCRIPTION
-    const col3Width = 25;  // @
-    const col4Width = 20;  // K (unit price column)
-    const col5Width = 16;  // K (kwacha)
-    const col6Width = tableWidth - col1Width - col2Width - col3Width - col4Width - col5Width; // t (tambala)
-    
-    const col1X = marginX;
-    const col2X = col1X + col1Width;
-    const col3X = col2X + col2Width;
-    const col4X = col3X + col3Width;
-    const col5X = col4X + col4Width;
-    const col6X = col5X + col5Width;
-    const tableEndX = marginX + tableWidth;
-    
+    const qtyWidth = 20;
+    const descriptionWidth = 95;
+    const unitPriceWidth = 20;
+    const kwachaWidth = 42;
+    const tambalaWidth = tableWidth - qtyWidth - descriptionWidth - unitPriceWidth - kwachaWidth;
+
+    const qtyX = marginX;
+    const descriptionX = qtyX + qtyWidth;
+    const unitPriceX = descriptionX + descriptionWidth;
+    const kwachaX = unitPriceX + unitPriceWidth;
+    const tambalaX = kwachaX + kwachaWidth;
+
+    const headerRowHeight = 10;
+    const amountRowHeight = 7;
     const rowHeight = 8;
+    const totalMaterialsRowHeight = 10;
+    const summaryRowHeight = 9;
+    const blueBandWidth = unitPriceX + unitPriceWidth - qtyX;
 
-    // Table Header Row 1 - White background with black text
-    const headerRow1Y = yPos;
-    pdf.setDrawColor(0, 0, 0);
-    pdf.setLineWidth(0.5);
-    
-    // Draw header row 1 cells
-    pdf.rect(col1X, yPos, col1Width, rowHeight);
-    pdf.rect(col2X, yPos, col2Width, rowHeight);
-    pdf.rect(col3X, yPos, col3Width, rowHeight);
-    pdf.rect(col4X, yPos, tableEndX - col4X, rowHeight); // AMOUNT spans to end
-    
-    pdf.setFontSize(11);
-    pdf.setFont(undefined, "bold");
-    pdf.setTextColor(0, 0, 0);
-    pdf.text("QTY", col1X + col1Width/2, yPos + 6, { align: "center" });
-    pdf.text("DESCRIPTION", col2X + col2Width/2, yPos + 6, { align: "center" });
-    pdf.text("@", col3X + col3Width/2, yPos + 6, { align: "center" });
-    pdf.text("AMOUNT", col4X + (tableEndX - col4X)/2, yPos + 6, { align: "center" });
-    
-    yPos += rowHeight;
+    const drawTableHeader = () => {
+      pdf.setDrawColor(31, 31, 31);
+      pdf.setLineWidth(0.35);
+      pdf.setTextColor(0, 0, 0);
 
-    // Table Header Row 2 - Dark blue background
-    pdf.setFillColor(30, 58, 138);
-    pdf.rect(col1X, yPos, tableWidth, rowHeight, 'F');
-    
-    // Draw vertical lines on blue row
-    pdf.setDrawColor(255, 255, 255);
-    pdf.line(col2X, yPos, col2X, yPos + rowHeight);
-    pdf.line(col3X, yPos, col3X, yPos + rowHeight);
-    pdf.line(col4X, yPos, col4X, yPos + rowHeight);
-    pdf.line(col5X, yPos, col5X, yPos + rowHeight);
-    pdf.line(col6X, yPos, col6X, yPos + rowHeight);
-    
-    // Blue row text
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(10);
-    pdf.text("K", col4X + col4Width/2, yPos + 6, { align: "center" });
-    pdf.text("K", col5X + col5Width/2, yPos + 6, { align: "center" });
-    pdf.text("t", col6X + (tableEndX - col6X)/2, yPos + 6, { align: "center" });
-    
-    yPos += rowHeight;
-    
-    // Reset for data rows
-    pdf.setDrawColor(0, 0, 0);
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFont(undefined, "normal");
-    pdf.setFontSize(9);
+      pdf.rect(qtyX, yPos, qtyWidth, headerRowHeight);
+      pdf.rect(descriptionX, yPos, descriptionWidth, headerRowHeight);
+      pdf.rect(unitPriceX, yPos, unitPriceWidth, headerRowHeight);
+      pdf.rect(kwachaX, yPos, kwachaWidth + tambalaWidth, headerRowHeight);
 
-    // Table Items
+      pdf.setFont("times", "bold");
+      pdf.setFontSize(15);
+      pdf.text("QTY", qtyX + qtyWidth / 2, yPos + 6.7, { align: "center" });
+      pdf.text("DESCRIPTION", descriptionX + descriptionWidth / 2, yPos + 6.7, { align: "center" });
+      pdf.setFont("times", "italic");
+      pdf.text("@", unitPriceX + unitPriceWidth / 2, yPos + 6.7, { align: "center" });
+      pdf.setFont("times", "bold");
+      pdf.text("AMOUNT", kwachaX + (kwachaWidth + tambalaWidth) / 2, yPos + 6.7, { align: "center" });
+
+      yPos += headerRowHeight;
+
+      pdf.setFillColor(15, 51, 86);
+      pdf.rect(qtyX, yPos, blueBandWidth, amountRowHeight, "FD");
+      pdf.rect(kwachaX, yPos, kwachaWidth, amountRowHeight);
+      pdf.rect(tambalaX, yPos, tambalaWidth, amountRowHeight);
+
+      pdf.setFont("times", "italic");
+      pdf.setFontSize(11);
+      pdf.text("K", kwachaX + kwachaWidth / 2, yPos + 4.9, { align: "center" });
+      pdf.text("t", tambalaX + tambalaWidth / 2, yPos + 4.9, { align: "center" });
+
+      yPos += amountRowHeight;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10.5);
+    };
+
+    drawTableHeader();
+
     const items = doc.content?.items || [];
-    
+
     items.forEach((item: any) => {
       if (yPos > pageHeight - 50) {
         pdf.addPage();
         yPos = 20;
+        drawTableHeader();
       }
 
-      const rowStartY = yPos;
-      
-      // Format amount
-      const amountStr = item.amount.toFixed(2);
-      const [kwacha, tambala] = amountStr.split('.');
+      const formattedAmount = formatTableAmount(item.amount || 0);
 
-      // Draw row cells
-      pdf.rect(col1X, yPos, col1Width, rowHeight);
-      pdf.rect(col2X, yPos, col2Width, rowHeight);
-      pdf.rect(col3X, yPos, col3Width, rowHeight);
-      pdf.rect(col4X, yPos, col4Width, rowHeight);
-      pdf.rect(col5X, yPos, col5Width, rowHeight);
-      pdf.rect(col6X, yPos, tableEndX - col6X, rowHeight);
+      pdf.rect(qtyX, yPos, qtyWidth, rowHeight);
+      pdf.rect(descriptionX, yPos, descriptionWidth, rowHeight);
+      pdf.rect(unitPriceX, yPos, unitPriceWidth, rowHeight);
+      pdf.rect(kwachaX, yPos, kwachaWidth, rowHeight);
+      pdf.rect(tambalaX, yPos, tambalaWidth, rowHeight);
 
-      // Cell content
-      pdf.text(item.qty.toString(), col1X + col1Width/2, yPos + 5.5, { align: "center" });
-      
-      const descLines = pdf.splitTextToSize(item.description, col2Width - 4);
-      pdf.text(descLines[0] || "", col2X + 2, yPos + 5.5);
-      
-      pdf.text(item.unit_price.toLocaleString(), col4X + col4Width - 2, yPos + 5.5, { align: "right" });
-      pdf.text(kwacha, col5X + col5Width - 2, yPos + 5.5, { align: "right" });
-      pdf.text(tambala, col6X + (tableEndX - col6X)/2, yPos + 5.5, { align: "center" });
+      pdf.text(String(item.qty ?? ""), qtyX + qtyWidth / 2, yPos + 5.5, { align: "center" });
+
+      const descLines = pdf.splitTextToSize(String(item.description || ""), descriptionWidth - 4);
+      pdf.text(descLines[0] || "", descriptionX + 2, yPos + 5.5);
+
+      pdf.text(formatGroupedNumber(Number(item.unit_price || 0)), unitPriceX + unitPriceWidth - 2.5, yPos + 5.5, {
+        align: "right",
+      });
+      pdf.text(formattedAmount.kwacha, kwachaX + kwachaWidth - 2.5, yPos + 5.5, { align: "right" });
+      pdf.text(formattedAmount.tambala, tambalaX + tambalaWidth / 2, yPos + 5.5, { align: "center" });
 
       yPos += rowHeight;
     });
 
-    // Add empty rows to fill space (minimum 10 rows)
     const minRows = 10;
     const emptyRowsNeeded = Math.max(0, minRows - items.length);
     for (let i = 0; i < emptyRowsNeeded; i++) {
-      if (yPos > pageHeight - 50) break;
-      
-      pdf.rect(col1X, yPos, col1Width, rowHeight);
-      pdf.rect(col2X, yPos, col2Width, rowHeight);
-      pdf.rect(col3X, yPos, col3Width, rowHeight);
-      pdf.rect(col4X, yPos, col4Width, rowHeight);
-      pdf.rect(col5X, yPos, col5Width, rowHeight);
-      pdf.rect(col6X, yPos, tableEndX - col6X, rowHeight);
-      
-      pdf.text("00", col6X + (tableEndX - col6X)/2, yPos + 5.5, { align: "center" });
-      
+      if (yPos > pageHeight - 50) {
+        break;
+      }
+
+      pdf.rect(qtyX, yPos, qtyWidth, rowHeight);
+      pdf.rect(descriptionX, yPos, descriptionWidth, rowHeight);
+      pdf.rect(unitPriceX, yPos, unitPriceWidth, rowHeight);
+      pdf.rect(kwachaX, yPos, kwachaWidth, rowHeight);
+      pdf.rect(tambalaX, yPos, tambalaWidth, rowHeight);
+
+      pdf.text("00", tambalaX + tambalaWidth / 2, yPos + 5.5, { align: "center" });
+
       yPos += rowHeight;
     }
 
-    // Totals section
-    pdf.setFont(undefined, "bold");
-    pdf.setFontSize(10);
-    
-    // TOTAL COST OF MATERIALS
-    pdf.rect(col1X, yPos, col5X - col1X, rowHeight);
-    pdf.rect(col5X, yPos, tableEndX - col5X, rowHeight);
-    pdf.text("TOTAL COST OF MATERIALS", col1X + 4, yPos + 5.5);
-    
-    const subtotal = doc.content?.subtotal || 0;
-    pdf.text(subtotal.toLocaleString(), col5X + (col5Width + (tableEndX - col6X))/2, yPos + 5.5, { align: "center" });
-    
-    yPos += rowHeight;
+    if (yPos > pageHeight - 40) {
+      pdf.addPage();
+      yPos = 20;
+      drawTableHeader();
+    }
 
-    // Labour cost and transport
-    pdf.setFont(undefined, "italic");
-    pdf.rect(col1X, yPos, col5X - col1X, rowHeight);
-    pdf.rect(col5X, yPos, tableEndX - col5X, rowHeight);
-    pdf.text("Labour cost and transport", col1X + 4, yPos + 5.5);
-    
-    const laborCost = doc.content?.labor_cost || 0;
-    pdf.text(laborCost.toLocaleString(), col5X + (col5Width + (tableEndX - col6X))/2, yPos + 5.5, { align: "center" });
-    
-    yPos += rowHeight;
+    const subtotal = formatTableAmount(doc.content?.subtotal || 0);
+    const laborCost = formatTableAmount(doc.content?.labor_cost || 0);
+    const total = formatTableAmount(doc.content?.total || 0);
 
-    // NET TOTAL
-    pdf.setFont(undefined, "bold");
-    pdf.setFontSize(11);
-    pdf.rect(col1X, yPos, col5X - col1X, rowHeight);
-    pdf.rect(col5X, yPos, tableEndX - col5X, rowHeight);
-    pdf.text("NET TOTAL", col1X + 4, yPos + 5.5);
-    
-    const total = doc.content?.total || 0;
-    pdf.text(total.toLocaleString(), col5X + (col5Width + (tableEndX - col6X))/2, yPos + 5.5, { align: "center" });
-    
-    yPos += rowHeight;
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(13);
+    pdf.rect(qtyX, yPos, qtyWidth, totalMaterialsRowHeight);
+    pdf.rect(descriptionX, yPos, descriptionWidth, totalMaterialsRowHeight);
+    pdf.rect(unitPriceX, yPos, unitPriceWidth, totalMaterialsRowHeight);
+    pdf.rect(kwachaX, yPos, kwachaWidth, totalMaterialsRowHeight);
+    pdf.rect(tambalaX, yPos, tambalaWidth, totalMaterialsRowHeight);
+    pdf.text("TOTAL COST OF MATERIALS", descriptionX + descriptionWidth / 2, yPos + 6.8, { align: "center" });
+    pdf.text(subtotal.kwacha, kwachaX + kwachaWidth - 2.5, yPos + 6.8, { align: "right" });
+    pdf.text(subtotal.tambala, tambalaX + tambalaWidth / 2, yPos + 6.8, { align: "center" });
+
+    yPos += totalMaterialsRowHeight;
+
+    pdf.setFontSize(12);
+    pdf.rect(qtyX, yPos, blueBandWidth, summaryRowHeight);
+    pdf.rect(kwachaX, yPos, kwachaWidth, summaryRowHeight);
+    pdf.rect(tambalaX, yPos, tambalaWidth, summaryRowHeight);
+    pdf.text("Labour cost and transport", qtyX + blueBandWidth / 2, yPos + 6, { align: "center" });
+    pdf.text(laborCost.kwacha, kwachaX + kwachaWidth - 2.5, yPos + 6, { align: "right" });
+    pdf.text(laborCost.tambala, tambalaX + tambalaWidth / 2, yPos + 6, { align: "center" });
+
+    yPos += summaryRowHeight;
+
+    pdf.setFontSize(12.5);
+    pdf.rect(qtyX, yPos, blueBandWidth, summaryRowHeight);
+    pdf.rect(kwachaX, yPos, kwachaWidth, summaryRowHeight);
+    pdf.rect(tambalaX, yPos, tambalaWidth, summaryRowHeight);
+    pdf.text("NET TOTAL", qtyX + blueBandWidth / 2, yPos + 6, { align: "center" });
+    pdf.text(total.kwacha, kwachaX + kwachaWidth - 2.5, yPos + 6, { align: "right" });
+    pdf.text(total.tambala, tambalaX + tambalaWidth / 2, yPos + 6, { align: "center" });
+
+    yPos += summaryRowHeight;
 
     // Orange footer bar
     pdf.setFillColor(245, 158, 11);
-    pdf.rect(col1X, yPos, tableWidth, 4, 'F');
+    pdf.rect(qtyX, yPos, tableWidth, 4, "F");
 
     // Notes section (if any)
     if (doc.content?.notes) {
@@ -450,7 +452,7 @@ export default function Documents() {
       pdf.setFont(undefined, "normal");
       pdf.setTextColor(0, 0, 0);
       const splitNotes = pdf.splitTextToSize(doc.content.notes, tableWidth);
-      pdf.text(splitNotes, col1X, yPos);
+      pdf.text(splitNotes, qtyX, yPos);
     }
 
     pdf.save(`${doc.title.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
