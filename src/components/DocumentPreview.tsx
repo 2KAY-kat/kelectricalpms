@@ -487,7 +487,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
               {/* Orange footer bar */}
               <div
                 style={{
-                  height: scaleValue(6),
+                  height: scaleValue(16),
                   backgroundColor: "#f59e0b",
                   marginTop: "auto",
                   marginLeft: `-${scaleValue(24)}px`,
