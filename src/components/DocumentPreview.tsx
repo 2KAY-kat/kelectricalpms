@@ -109,6 +109,25 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
               }}
             >
               <div>
+              {/* Invoice Title Above Header */}
+              {isInvoice && (
+                <div
+                  style={{
+                    textAlign: "right",
+                    paddingRight: scaleValue(40),
+                    marginRight: scaleValue(70),
+                    paddingTop: scaleValue(10),
+                    marginBottom: scaleValue(5),
+                    fontSize: scaleValue(18),
+                    color: "#000",
+                    fontWeight: "bold",
+                    fontFamily: '"Times New Roman", Times, serif',
+                  }}
+                >
+                  INVOICE
+                </div>
+              )}
+
               {/* Header image */}
               <div style={{ position: "relative", marginBottom: scaleValue(4) }}>
                 <img
@@ -116,21 +135,6 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                   alt="Header"
                   style={{ width: "100%", height: "auto" }}
                 />
-                {isInvoice && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: scaleValue(12),
-                      right: scaleValue(80),
-                      fontSize: scaleValue(18),
-                      color: "#000",
-                      fontWeight: "bold",
-                      fontFamily: '"Times New Roman", Times, serif',
-                    }}
-                  >
-                    INVOICE
-                  </span>
-                )}
                 <span
                   style={{
                     position: "absolute",

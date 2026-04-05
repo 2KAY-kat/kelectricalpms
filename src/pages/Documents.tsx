@@ -238,10 +238,11 @@ export default function Documents() {
       const headerHeight = headerWidth * (headerImg.height / headerImg.width);
       
       if (isInvoice) {
-        pdf.setFontSize(14);
+        pdf.setFontSize(16);
         pdf.setTextColor(0, 0, 0);
         pdf.setFont("Times New Roman", "bold");
-        pdf.text("INVOICE", pageWidth - 70, yPos + 6, { align: "right" });
+        pdf.text("INVOICE", pageWidth - 45, yPos + 5, { align: "right" });
+        yPos += 15; // Push letterhead down
       }
       
       pdf.addImage(headerImg, "PNG", headerMarginX, yPos, headerWidth, headerHeight);
