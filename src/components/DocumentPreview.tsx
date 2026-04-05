@@ -478,7 +478,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
               {/* Notes */}
               {doc.content?.notes && (
                 <div style={{ marginTop: scaleValue(12), fontSize: scaleValue(9), whiteSpace: "pre-wrap" }}>
-                  {doc.content.notes}
+                 * {doc.content.notes}
                 </div>
               )}
 

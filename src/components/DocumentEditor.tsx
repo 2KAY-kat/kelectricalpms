@@ -147,6 +147,14 @@ export function DocumentEditor({
           </Table>
         </div>
 
+        <div className="flex items-center justify-between">
+          <Label>Add Additional Items</Label>
+          <Button type="button" variant="outline" size="sm" onClick={addRow}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Row
+          </Button>
+        </div>
+
         <div className="bg-muted/50 p-4 rounded-lg space-y-3">
           <div className="flex justify-between items-center">
             <span className="font-medium">Total Cost of Materials:</span>
