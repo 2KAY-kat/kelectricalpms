@@ -195,6 +195,17 @@ export default function Documents() {
     // Get document date from content or fallback to created_at
     const docDate = doc.content?.document_date ? new Date(doc.content.document_date) : new Date(doc.created_at);
     const dateStr = format(docDate, "dd/MM/yyyy");
+    const pxToMm = (px: number) => (px * 25.4) / 96;
+    const pxToPt = (px: number) => (px * 72) / 96;
+    const fontBaselineMm = (fontSizePx: number) => pxToMm(fontSizePx * 0.8);
+    const headerMarginX = 12;
+    const attentionFontPx = 12;
+    const titleFontPx = 16;
+    const attentionLineHeightPx = attentionFontPx * 1.2;
+    const titleLineHeightPx = titleFontPx * 1.2;
+    const previewSectionGapPx = 12;
+    const previewAttentionTopPx = 24;
+    const previewAttentionIndentPx = 12;
 
     try {
       // Use the exact header image for consistency
@@ -202,7 +213,7 @@ export default function Documents() {
       // Calculate aspect ratio to fit width
       const headerWidth = pageWidth - 24;
       const headerHeight = headerWidth * (headerImg.height / headerImg.width);
-      pdf.addImage(headerImg, "PNG", 12, yPos, headerWidth, headerHeight);
+      pdf.addImage(headerImg, "PNG", headerMarginX, yPos, headerWidth, headerHeight);
       
       // Overlay date on the letterhead's date placeholder (top-right of header)
       pdf.setFontSize(12);
@@ -210,7 +221,7 @@ export default function Documents() {
       pdf.setFont(undefined, "bold");
       pdf.text(`Date: ${dateStr}`, pageWidth - 13, yPos + headerHeight - 18, { align: "right" });
       
-      yPos += headerHeight + 5;
+      yPos += headerHeight;
     } catch (e) {
       console.log("Could not load header image");
       // Fallback: Draw header manually
@@ -243,11 +254,16 @@ export default function Documents() {
     // yPos += 8;
 
     // Attention To with dotted line
-    pdf.setFontSize(12);
+    const attentionTopY = yPos + pxToMm(previewAttentionTopPx);
+    const attentionBaselineY = attentionTopY + fontBaselineMm(attentionFontPx);
+    const titleTopY = attentionTopY + pxToMm(attentionLineHeightPx + previewSectionGapPx);
+    const titleBaselineY = titleTopY + fontBaselineMm(titleFontPx);
+
+    pdf.setFontSize(pxToPt(attentionFontPx));
     pdf.setTextColor(0, 0, 0);
-    pdf.setFont(undefined, "normal");
+    pdf.setFont("Times New Roman", "normal");
     const attText = doc.content?.attention_to ? `Att: ${doc.content.attention_to}` : "Att:";
-    pdf.text(attText, 12, yPos);
+    pdf.text(attText, headerMarginX + pxToMm(previewAttentionIndentPx), attentionBaselineY);
     
     // Draw dotted line after "Att:"
     // const attWidth = pdf.getTextWidth(attText);
@@ -257,13 +273,12 @@ export default function Documents() {
     // for (let x = 12 + attWidth + 2; x < pageWidth - 12; x += 3) {
     //   pdf.text(".", x, yPos);
     // }
-    yPos += 10;
 
     // Document Title - centered and bold
-    pdf.setFontSize(12);
-    pdf.setFont(undefined, "bold");
-    pdf.text(doc.title.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
-    yPos += 8;
+    pdf.setFontSize(pxToPt(titleFontPx));
+    pdf.setFont("Times New Roman", "bold");
+    pdf.text(doc.title.toUpperCase(), pageWidth / 2, titleBaselineY, { align: "center" });
+    yPos = titleTopY + pxToMm(titleLineHeightPx + previewSectionGapPx);
 
     // Table structure matching template exactly
     const marginX = 12;
