@@ -61,6 +61,44 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
     return () => observer.disconnect();
   }, [open]);
 
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[min(96vw,1100px)] max-w-[1100px] max-h-[92vh] p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-0">
+          <DialogTitle>Document Preview</DialogTitle>
+        </DialogHeader>
+        <ScrollArea className="h-[84vh]">
+          <div className="p-6" ref={paperRef}>
+            <DocumentPaper doc={doc} paperWidth={paperWidth} />
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function DocumentPaper({ doc, paperWidth = 595 }: { doc: any; paperWidth?: number }) {
+  const items = doc.content?.items || [];
+  const subtotal = doc.content?.subtotal || 0;
+  const laborCost = doc.content?.labor_cost || 0;
+  const total = doc.content?.total || 0;
+  const docDate = doc.content?.document_date
+    ? new Date(doc.content.document_date)
+    : new Date(doc.created_at);
+  const dateStr = format(docDate, "dd/MM/yyyy");
+  const isInvoice = doc.document_type === "invoice";
+
+  const minRows = 10;
+  const emptyRows = Math.max(0, minRows - items.length);
+
+  const formatGroupedNumber = (value: number) =>
+    Number(value || 0).toLocaleString("en-US").replace(/,/g, ", ");
+
+  const formatAmount = (amount: number) => {
+    const [kwacha, tambala] = amount.toFixed(2).split(".");
+    return { kwacha: formatGroupedNumber(Number(kwacha)), tambala };
+  };
+
   const ptToPx = (pt: number) => (pt * 96) / 72;
   const paperBaseWidth = 595;
   const paperScale = Math.max(0.72, Math.min(1.28, paperWidth / paperBaseWidth));
@@ -86,22 +124,13 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(96vw,1100px)] max-w-[1100px] max-h-[92vh] p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle>Document Preview</DialogTitle>
-        </DialogHeader>
-        <ScrollArea className="h-[84vh]">
-          <div className="p-6">
-            {/* A4-like paper */}
-            <div
-              ref={paperRef}
-              className="bg-white text-black shadow-lg mx-auto border"
-              style={{
-                width: "100%",
-                maxWidth: 760,
-                minHeight: pageMinHeight,
-                padding: `${scaleValue(16)}px ${scaleValue(24)}px`,
+    <div
+      className="bg-white text-black shadow-lg mx-auto border"
+      style={{
+        width: "100%",
+        maxWidth: 760,
+        minHeight: pageMinHeight,
+        padding: `${scaleValue(16)}px ${scaleValue(24)}px`,
                 fontFamily: "Arial, Helvetica, sans-serif",
                 fontSize: scaleValue(11),
                 display: "flex",
@@ -453,7 +482,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
               
               {/* Signature section */}
               {isInvoice && (
-                <div style={{ marginTop: scaleValue(40), marginBottom: scaleValue(20), textAlign: "right", fontSize: scaleValue(11), fontFamily: '"Times New Roman", Times, serif', fontStyle: "italic", marginRight: scaleValue(4) }}>
+                <div style={{ marginTop: scaleValue(50), marginBottom: scaleValue(20), textAlign: "right", fontSize: scaleValue(11), fontFamily: '"Times New Roman", Times, serif', fontStyle: "italic", marginRight: scaleValue(4) }}>
                   Authorised signature: .......................................
                 </div>
               )}
@@ -472,9 +501,5 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                 }}
               />
             </div>
-          </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
   );
 }

@@ -16,10 +16,53 @@ import { format } from "date-fns";
 import { documentSchema } from "@/lib/validations";
 import { z } from "zod";
 import { DocumentEditor } from "@/components/DocumentEditor";
-import { DocumentPreview } from "@/components/DocumentPreview";
+import { DocumentPreview, DocumentPaper } from "@/components/DocumentPreview";
 import { useUserRole } from "@/hooks/useUserRole";
 import { ensurePdfFonts, PDF_FONT_FAMILIES } from "@/lib/pdfFonts";
 import { cn } from "@/lib/utils";
+import { useRef } from "react";
+
+function DocumentThumbnail({ doc, onClick }: { doc: any; onClick: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0) {
+          setScale(entry.contentRect.width / 595);
+        }
+      }
+    });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative bg-white rounded-md flex-none shadow-sm border border-border overflow-hidden cursor-pointer group-hover:shadow-md transition-all duration-200"
+      style={{ aspectRatio: "1 / 1.414" }}
+      onClick={onClick}
+    >
+      {/* Real document content scaled down */}
+      <div
+        className="absolute top-0 left-0 w-[595px] origin-top-left pointer-events-none select-none bg-white"
+        style={{ transform: `scale(${scale})` }}
+      >
+        <DocumentPaper doc={doc} paperWidth={595} />
+      </div>
+
+      {/* Top Right Badge - rendered outside the scaled canvas so it stays legible */}
+      <div className="absolute top-2 right-2 bg-primary/90 text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded shadow-sm capitalize tracking-wider z-10">
+        {doc.document_type}
+      </div>
+    </div>
+  );
+}
 
 export default function Documents() {
   const { isEmployee } = useUserRole();
@@ -739,50 +782,7 @@ export default function Documents() {
           documents.map((doc) => (
             <div key={doc.id} className="flex flex-col gap-3 group">
               {/* Document A4 Preview Thumbnail */}
-              <div
-                className="relative bg-white rounded-md flex-none shadow-sm border border-border overflow-hidden cursor-pointer group-hover:shadow-md transition-all duration-200"
-                style={{ aspectRatio: '1 / 1.414' }}
-                onClick={() => setPreviewDoc(doc)}
-              >
-                {/* Top Right Badge */}
-                <div className="absolute top-2 right-2 bg-primary/90 text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded shadow-sm capitalize tracking-wider z-10">
-                  {doc.document_type}
-                </div>
-
-                {/* Wireframe inner content (scaling visual effect) */}
-                <div className="w-full h-full p-3 flex flex-col gap-2.5 opacity-[0.65] pointer-events-none select-none">
-                  {/* Header */}
-                  <div className="w-full flex justify-between items-start gap-4">
-                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-sm shrink-0"></div>
-                     <div className="flex-1 space-y-1.5 pt-1">
-                        <div className="w-full h-2 bg-blue-900/40 rounded-full"></div>
-                        <div className="w-3/4 h-1.5 bg-orange-400/40 rounded-full"></div>
-                     </div>
-                  </div>
-                  
-                  {/* Metadata / Address mock */}
-                  <div className="w-1/3 h-1.5 bg-gray-300 rounded-full mt-1"></div>
-                  
-                  {/* Title mock */}
-                  <div className="w-2/3 h-2 bg-gray-800/80 rounded-full my-1 mx-auto"></div>
-
-                  {/* Table mock */}
-                  <div className="border border-gray-200 rounded-sm overflow-hidden mt-1 flex-1 flex flex-col">
-                     <div className="w-full h-3 bg-gray-100 border-b border-gray-200"></div>
-                     <div className="w-full flex-1 flex flex-col">
-                        <div className="w-full h-3 border-b border-gray-100/60"></div>
-                        <div className="w-full h-3 border-b border-gray-100/60"></div>
-                        <div className="w-full h-3 border-b border-gray-100/60"></div>
-                     </div>
-                     <div className="w-full h-5 bg-blue-900/10 border-t border-gray-200 mt-auto flex flex-col">
-                        <div className="w-full h-[1px] bg-white opacity-50 mt-1"></div>
-                     </div>
-                  </div>
-
-                  {/* Orange footer bar */}
-                  <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-orange-400"></div>
-                </div>
-              </div>
+              <DocumentThumbnail doc={doc} onClick={() => setPreviewDoc(doc)} />
 
               {/* Document Info and Tools */}
               <div className="px-1 space-y-2 flex flex-col">
