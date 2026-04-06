@@ -119,8 +119,11 @@ export function DocumentPaper({ doc, paperWidth = 595 }: { doc: any; paperWidth?
   const calibriFont = '"Calibri", "Segoe UI", Arial, sans-serif';
   const itemFontSize = scaleValue(ptToPx(12));
   const totalMaterialsFontSize = scaleValue(ptToPx(18));
+  const totalMaterialsFontSizePrev = scaleValue(ptToPx(14));
   const laborFontSize = scaleValue(ptToPx(16));
+  const laborFontSizePrev = scaleValue(ptToPx(14));
   const netTotalFontSize = scaleValue(ptToPx(18));
+  const netTotalFontSizePrev = scaleValue(ptToPx(16));
   const bodyCellStyle = {
     border: tableBorder,
     padding: `${scaleValue(5)}px ${scaleValue(8)}px`,
@@ -236,10 +239,10 @@ export function DocumentPaper({ doc, paperWidth = 595 }: { doc: any; paperWidth?
                 }}
               >
                 <colgroup>
-                  <col style={{ width: "8.5%" }} />
-                  <col style={{ width: "45%" }} />
-                  <col style={{ width: "17%" }} />
-                  <col style={{ width: "23.5%" }} />
+                  <col style={{ width: "9%" }} />
+                  <col style={{ width: "48%" }} />
+                  <col style={{ width: "16%" }} />
+                  <col style={{ width: "21%" }} />
                   <col style={{ width: "6%" }} />
                 </colgroup>
                 {/* Header Row 1 */}
@@ -446,33 +449,37 @@ export function DocumentPaper({ doc, paperWidth = 595 }: { doc: any; paperWidth?
                       <tr style={{ height: scaleValue(38) }}>
                         <td style={bodyCellStyle} />
                         <td 
-                          colSpan={2}
+                          colSpan={1}
                           style={{ 
                             ...bodyCellStyle, 
                             textAlign: "center", 
                             fontWeight: "bold", 
                             fontFamily: centuryGothicFont, 
-                            fontSize: totalMaterialsFontSize, 
-                            letterSpacing: `${scaleValue(0.01)}em` 
+                            fontSize: totalMaterialsFontSizePrev, 
+                            letterSpacing: `${scaleValue(0.01)}em`,
+                            paddingLeft: scaleValue(10),
+                            paddingRight: scaleValue(10),
                           }}
                         >
                           TOTAL COST OF MATERIALS
                         </td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: totalMaterialsFontSize }}>
+                        <td style={bodyCellStyle} />
+
+                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: totalMaterialsFontSizePrev }}>
                           {formatAmount(subtotal).kwacha}
                         </td>
-                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: totalMaterialsFontSize }}>
+                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: totalMaterialsFontSizePrev }}>
                           {formatAmount(subtotal).tambala}
                         </td>
                       </tr>
                       <tr style={{ height: scaleValue(34) }}>
-                        <td colSpan={3} style={{ ...bodyCellStyle, textAlign: "center", fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: laborFontSize }}>
+                        <td colSpan={3} style={{ ...bodyCellStyle, textAlign: "center", fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: laborFontSizePrev }}>
                           Labour cost and transport
                         </td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: laborFontSize }}>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: laborFontSizePrev }}>
                           {formatAmount(laborCost).kwacha}
                         </td>
-                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: laborFontSize }}>
+                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: laborFontSizePrev }}>
                           {formatAmount(laborCost).tambala}
                         </td>
                       </tr>
@@ -480,10 +487,10 @@ export function DocumentPaper({ doc, paperWidth = 595 }: { doc: any; paperWidth?
                         <td colSpan={3} style={{ ...bodyCellStyle, textAlign: "center", fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSize }}>
                           NET TOTAL
                         </td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSize }}>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(20), marginRight: scaleValue(8), fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSizePrev }}>
                           {formatAmount(total).kwacha}
                         </td>
-                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSize }}>
+                        <td style={{ ...bodyCellStyle, textAlign: "center", paddingLeft: 0, paddingRight: 0, fontWeight: "bold", fontFamily: calibriFont, fontSize: netTotalFontSizePrev }}>
                           {formatAmount(total).tambala}
                         </td>
                       </tr>
