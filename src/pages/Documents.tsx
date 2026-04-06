@@ -76,7 +76,7 @@ function DocumentThumbnail({ doc, onClick }: { doc: any; onClick: () => void }) 
 
 export default function Documents() {
   const { isEmployee } = useUserRole();
-  const { saveDocument, fetchDocuments, online, isElectron } = useSync();
+  const { saveDocument, fetchDocuments, syncDocuments, online, isElectron } = useSync();
   const [documents, setDocuments] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [branding, setBranding] = useState<any>(null);

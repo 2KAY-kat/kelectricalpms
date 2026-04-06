@@ -49,7 +49,7 @@ function createWindow() {
       submenu: [
         { label: 'Dashboard Home', accelerator: 'CmdOrCtrl+H', click: () => { win.webContents.send('nav-to', '/'); } },
         { type: 'separator' },
-        { label: 'About K.Electrical', click: () => { win.webContents.send('nav-to', '/branding'); } },
+        { label: 'About K.Electrical', click: () => { win.webContents.send('nav-to', '/about'); } },
         { type: 'separator' },
         { label: 'Quit', role: 'quit' }
       ]

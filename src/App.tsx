@@ -16,6 +16,7 @@ import Bulletin from "./pages/Bulletin";
 import Branding from "./pages/Branding";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import { SyncProvider } from "@/hooks/useSync";
 import { useNavigate } from "react-router-dom";
@@ -91,6 +92,7 @@ const App = () => (
             <Route path="/bulletin" element={<ProtectedRoute><Bulletin /></ProtectedRoute>} />
             <Route path="/branding" element={<ProtectedRoute><Branding /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+            <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
