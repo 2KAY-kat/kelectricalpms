@@ -57,15 +57,15 @@ export function AppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={window.location.pathname === item.url || (item.url === "/" && window.location.pathname === "/")}
+                    className="data-[active=true]:bg-secondary data-[active=true]:text-secondary-foreground hover:bg-sidebar-accent/50 transition-all duration-200"
+                  >
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "hover:bg-sidebar-accent/50"
-                      }
+                      className="flex items-center gap-2 w-full"
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -83,15 +83,12 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/branding"
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "hover:bg-sidebar-accent/50"
-                      }
-                    >
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={window.location.pathname === "/branding"}
+                    className="data-[active=true]:bg-secondary data-[active=true]:text-secondary-foreground hover:bg-sidebar-accent/50 transition-all duration-200"
+                  >
+                    <NavLink to="/branding" className="flex items-center gap-2 w-full">
                       <Building2 className="h-4 w-4" />
                       <span>Company Branding</span>
                     </NavLink>
@@ -108,15 +105,12 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/admin"
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "hover:bg-sidebar-accent/50"
-                      }
-                    >
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={window.location.pathname === "/admin"}
+                    className="data-[active=true]:bg-secondary data-[active=true]:text-secondary-foreground hover:bg-sidebar-accent/50 transition-all duration-200"
+                  >
+                    <NavLink to="/admin" className="flex items-center gap-2 w-full">
                       <Shield className="h-4 w-4" />
                       <span>Admin Panel</span>
                     </NavLink>
