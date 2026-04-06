@@ -212,7 +212,7 @@ export default function Documents() {
     const rowTextBaseline = (rowTop: number, rowHeight: number, fontSizePt: number) =>
       rowTop + rowHeight / 2 + ptToMm(fontSizePt) * 0.25;
     const headerMarginX = 12;
-    const attentionFontPx = 12;
+    const attentionFontPx = 14;
     const titleFontPx = 16;
     const attentionLineHeightPx = attentionFontPx * 1.2;
     const titleLineHeightPx = titleFontPx * 1.2;
@@ -315,10 +315,10 @@ export default function Documents() {
     // Table structure matching the approved reference layout
     const marginX = 12;
     const tableWidth = pageWidth - (marginX * 2);
-    const qtyWidth = 20;
+    const qtyWidth = 16;
     const descriptionWidth = 95;
-    const unitPriceWidth = 20;
-    const kwachaWidth = 42;
+    const unitPriceWidth = 25;
+    const kwachaWidth = 38;
     const tambalaWidth = tableWidth - qtyWidth - descriptionWidth - unitPriceWidth - kwachaWidth;
 
     const qtyX = marginX;

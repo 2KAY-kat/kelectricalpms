@@ -159,7 +159,7 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
               />
 
               {/* Attention To */}
-              <div style={{ marginBottom: scaleValue(12), fontSize: scaleValue(12), marginTop: scaleValue(24), marginLeft: scaleValue(12), fontFamily: "Times New Roman", }}>
+              <div style={{ marginBottom: scaleValue(24), fontSize: scaleValue(14), marginTop: scaleValue(24), marginLeft: scaleValue(12), fontFamily: "Times New Roman", }}>
                 <span>Att: {doc.content?.attention_to || ""}</span>
                 {/* <span
                   style={{
@@ -199,11 +199,11 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
                 }}
               >
                 <colgroup>
-                  <col style={{ width: "10.5%" }} />
+                  <col style={{ width: "6.5%" }} />
                   <col style={{ width: "52%" }} />
-                  <col style={{ width: "11%" }} />
+                  <col style={{ width: "15%" }} />
                   <col style={{ width: "22.5%" }} />
-                  <col style={{ width: "4%" }} />
+                  <col style={{ width: "6%" }} />
                 </colgroup>
                 {/* Header Row 1 */}
                 <thead>
