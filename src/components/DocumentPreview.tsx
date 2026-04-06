@@ -106,9 +106,11 @@ export function DocumentPaper({ doc, paperWidth = 595 }: { doc: any; paperWidth?
 
   const ptToPx = (pt: number) => (pt * 96) / 72;
   const paperBaseWidth = 595;
-  const paperScale = Math.max(0.72, Math.min(1.28, paperWidth / paperBaseWidth));
+  // Hold the scale steady at 1 if paperWidth is small (for horizontal scrolling) or scale up if larger.
+  // In the preview, we usually pass 595, so scale will be 1.
+  const paperScale = paperWidth >= 595 ? paperWidth / paperBaseWidth : 1;
   const scaleValue = (value: number) => value * paperScale;
-  const pageMinHeight = Math.max(842, 842 * paperScale);
+  const pageMinHeight = 842 * paperScale;
   const tableBorderColor = "#1f1f1f";
   const tableBorder = `1px solid ${tableBorderColor}`;
   const tableBlue = "#0f3358";
@@ -124,8 +126,9 @@ export function DocumentPaper({ doc, paperWidth = 595 }: { doc: any; paperWidth?
     padding: `${scaleValue(5)}px ${scaleValue(8)}px`,
     fontFamily: centuryGothicFont,
     fontSize: itemFontSize,
-    lineHeight: 1,
+    lineHeight: 1.2,
     verticalAlign: "middle" as const,
+    whiteSpace: "nowrap" as const,
   };
 
   return (
@@ -233,10 +236,10 @@ export function DocumentPaper({ doc, paperWidth = 595 }: { doc: any; paperWidth?
                 }}
               >
                 <colgroup>
-                  <col style={{ width: "6.5%" }} />
-                  <col style={{ width: "52%" }} />
-                  <col style={{ width: "15%" }} />
-                  <col style={{ width: "22.5%" }} />
+                  <col style={{ width: "8.5%" }} />
+                  <col style={{ width: "45%" }} />
+                  <col style={{ width: "17%" }} />
+                  <col style={{ width: "23.5%" }} />
                   <col style={{ width: "6%" }} />
                 </colgroup>
                 {/* Header Row 1 */}
@@ -347,8 +350,10 @@ export function DocumentPaper({ doc, paperWidth = 595 }: { doc: any; paperWidth?
                         <td
                           style={{
                             ...bodyCellStyle,
+                            whiteSpace: "normal",
                             overflowWrap: "anywhere",
                             wordBreak: "break-word",
+                            lineHeight: 1.2,
                           }}
                         >
                           {item.description}
@@ -439,11 +444,20 @@ export function DocumentPaper({ doc, paperWidth = 595 }: { doc: any; paperWidth?
                     <>
                       {/* Total Cost of Materials */}
                       <tr style={{ height: scaleValue(38) }}>
-                        <td style={bodyCellStyle}>&nbsp;</td>
-                        <td style={{ ...bodyCellStyle, textAlign: "center", fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: totalMaterialsFontSize, letterSpacing: `${scaleValue(0.01)}em` }}>
+                        <td style={bodyCellStyle} />
+                        <td 
+                          colSpan={2}
+                          style={{ 
+                            ...bodyCellStyle, 
+                            textAlign: "center", 
+                            fontWeight: "bold", 
+                            fontFamily: centuryGothicFont, 
+                            fontSize: totalMaterialsFontSize, 
+                            letterSpacing: `${scaleValue(0.01)}em` 
+                          }}
+                        >
                           TOTAL COST OF MATERIALS
                         </td>
-                        <td style={bodyCellStyle}>&nbsp;</td>
                         <td style={{ ...bodyCellStyle, textAlign: "right", paddingRight: scaleValue(10), fontWeight: "bold", fontFamily: centuryGothicFont, fontSize: totalMaterialsFontSize }}>
                           {formatAmount(subtotal).kwacha}
                         </td>
