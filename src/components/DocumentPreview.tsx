@@ -68,8 +68,10 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
           <DialogTitle>Document Preview</DialogTitle>
         </DialogHeader>
         <ScrollArea className="h-[84vh]">
-          <div className="p-6" ref={paperRef}>
-            <DocumentPaper doc={doc} paperWidth={paperWidth} />
+          <div className="p-4 sm:p-8 min-w-max flex justify-center bg-gray-50/50" ref={paperRef}>
+            <div className="shadow-2xl">
+              <DocumentPaper doc={doc} paperWidth={Math.max(paperWidth, 595)} />
+            </div>
           </div>
         </ScrollArea>
       </DialogContent>
