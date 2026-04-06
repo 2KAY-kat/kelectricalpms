@@ -23,10 +23,11 @@ import { documentSchema } from "@/lib/validations";
 import { z } from "zod";
 import { DocumentEditor } from "@/components/DocumentEditor";
 import { DocumentPreview, DocumentPaper } from "@/components/DocumentPreview";
+import { useSync } from "@/hooks/useSync";
 import { useUserRole } from "@/hooks/useUserRole";
-import { ensurePdfFonts, PDF_FONT_FAMILIES } from "@/lib/pdfFonts";
-import { cn } from "@/lib/utils";
 import { useRef } from "react";
+import { cn } from "@/lib/utils";
+import { PDF_FONT_FAMILIES, ensurePdfFonts } from "@/lib/pdfFonts";
 
 function DocumentThumbnail({ doc, onClick }: { doc: any; onClick: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -75,6 +76,7 @@ function DocumentThumbnail({ doc, onClick }: { doc: any; onClick: () => void }) 
 
 export default function Documents() {
   const { isEmployee } = useUserRole();
+  const { saveDocument, fetchDocuments, online, isElectron } = useSync();
   const [documents, setDocuments] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [branding, setBranding] = useState<any>(null);
@@ -104,15 +106,20 @@ export default function Documents() {
   }, []);
 
   const fetchData = async () => {
-    const [docsResult, projectsResult, brandingResult] = await Promise.all([
-      supabase.from("documents").select("*, projects(name)").order("created_at", { ascending: false }),
-      supabase.from("projects").select("id, name"),
-      supabase.from("company_branding").select("*").limit(1).single(),
-    ]);
+    try {
+      const data = await fetchDocuments();
+      setDocuments(data || []);
 
-    if (!docsResult.error) setDocuments(docsResult.data || []);
-    if (!projectsResult.error) setProjects(projectsResult.data || []);
-    if (!brandingResult.error) setBranding(brandingResult.data);
+      const [projectsResult, brandingResult] = await Promise.all([
+        supabase.from("projects").select("id, name"),
+        supabase.from("company_branding").select("*").limit(1).single(),
+      ]);
+
+      if (!projectsResult.error) setProjects(projectsResult.data || []);
+      if (!brandingResult.error) setBranding(brandingResult.data);
+    } catch (err) {
+      console.error("Fetch data error:", err);
+    }
 
     setLoading(false);
   };
@@ -140,14 +147,9 @@ export default function Documents() {
       const validatedData = documentSchema.parse(dataToValidate);
 
       if (editingDoc) {
-        const { error } = await supabase
-          .from("documents")
-          .update(validatedData)
-          .eq("id", editingDoc.id);
+        const result = await saveDocument({ ...validatedData, id: editingDoc.id });
 
-        if (error) {
-          toast.error("Failed to update document");
-        } else {
+        if (result) {
           toast.success("Document updated successfully!");
           setOpen(false);
           setEditingDoc(null);
@@ -155,11 +157,9 @@ export default function Documents() {
           fetchData();
         }
       } else {
-        const { error } = await supabase.from("documents").insert([validatedData as any]);
+        const result = await saveDocument(validatedData);
 
-        if (error) {
-          toast.error("Failed to create document");
-        } else {
+        if (result) {
           toast.success("Document created successfully!");
           setOpen(false);
           resetForm();
