@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, FileText, Download, Edit, Trash2, CalendarIcon, Eye } from "lucide-react";
+import { Plus, FileText, Download, Edit, Trash2, CalendarIcon, Eye, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
@@ -722,7 +722,7 @@ export default function Documents() {
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {documents.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -737,64 +737,90 @@ export default function Documents() {
           </Card>
         ) : (
           documents.map((doc) => (
-            <Card key={doc.id} className="shadow-card hover:shadow-elevated transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-primary" />
-                    <CardTitle className="text-lg">{doc.title}</CardTitle>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium capitalize">
-                    {doc.document_type}
-                  </span>
-                </div>
-                {doc.projects && (
-                  <CardDescription>Project: {doc.projects.name}</CardDescription>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  Created: {format(new Date(doc.created_at), 'MMM dd, yyyy')}
+            <div key={doc.id} className="flex flex-col gap-3 group">
+              {/* Document A4 Preview Thumbnail */}
+              <div
+                className="relative bg-white rounded-md flex-none shadow-sm border border-border overflow-hidden cursor-pointer group-hover:shadow-md transition-all duration-200"
+                style={{ aspectRatio: '1 / 1.414' }}
+                onClick={() => setPreviewDoc(doc)}
+              >
+                {/* Top Right Badge */}
+                <div className="absolute top-2 right-2 bg-primary/90 text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded shadow-sm capitalize tracking-wider z-10">
+                  {doc.document_type}
                 </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPreviewDoc(doc)}
-                  >
-                    <Eye className="h-4 w-4" />
+                {/* Wireframe inner content (scaling visual effect) */}
+                <div className="w-full h-full p-3 flex flex-col gap-2.5 opacity-[0.65] pointer-events-none select-none">
+                  {/* Header */}
+                  <div className="w-full flex justify-between items-start gap-4">
+                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-sm shrink-0"></div>
+                     <div className="flex-1 space-y-1.5 pt-1">
+                        <div className="w-full h-2 bg-blue-900/40 rounded-full"></div>
+                        <div className="w-3/4 h-1.5 bg-orange-400/40 rounded-full"></div>
+                     </div>
+                  </div>
+                  
+                  {/* Metadata / Address mock */}
+                  <div className="w-1/3 h-1.5 bg-gray-300 rounded-full mt-1"></div>
+                  
+                  {/* Title mock */}
+                  <div className="w-2/3 h-2 bg-gray-800/80 rounded-full my-1 mx-auto"></div>
+
+                  {/* Table mock */}
+                  <div className="border border-gray-200 rounded-sm overflow-hidden mt-1 flex-1 flex flex-col">
+                     <div className="w-full h-3 bg-gray-100 border-b border-gray-200"></div>
+                     <div className="w-full flex-1 flex flex-col">
+                        <div className="w-full h-3 border-b border-gray-100/60"></div>
+                        <div className="w-full h-3 border-b border-gray-100/60"></div>
+                        <div className="w-full h-3 border-b border-gray-100/60"></div>
+                     </div>
+                     <div className="w-full h-5 bg-blue-900/10 border-t border-gray-200 mt-auto flex flex-col">
+                        <div className="w-full h-[1px] bg-white opacity-50 mt-1"></div>
+                     </div>
+                  </div>
+
+                  {/* Orange footer bar */}
+                  <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-orange-400"></div>
+                </div>
+              </div>
+
+              {/* Document Info and Tools */}
+              <div className="px-1 space-y-2 flex flex-col">
+                <div className="min-h-[40px]">
+                  <h3 className="font-semibold text-sm line-clamp-2 text-foreground leading-tight" title={doc.title}>
+                    {doc.title}
+                  </h3>
+                </div>
+                <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground justify-between">
+                  <span>{format(new Date(doc.created_at), 'MMM dd, yyyy')}</span>
+                  {doc.projects && <span className="truncate max-w-[90px]">{doc.projects.name}</span>}
+                </div>
+                
+                {/* Toolbar */}
+                <div className="flex gap-1.5 items-center pt-1.5 flex-wrap">
+                  <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-primary/50 text-foreground" onClick={() => setPreviewDoc(doc)} title="Preview">
+                    <Eye className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => generatePDF(doc)}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download
+                  <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-primary/50 text-foreground" onClick={() => generatePDF(doc)} title="Download PDF">
+                    <Download className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-blue-500/50 text-blue-600 dark:text-blue-400" onClick={() => {}} title="Share">
+                    <Share2 className="h-3.5 w-3.5" />
                   </Button>
                   {!isEmployee && (
                     <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(doc)}
-                      >
-                        <Edit className="h-4 w-4" />
+                      <div className="flex-1"></div>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded text-muted-foreground hover:text-foreground" onClick={() => handleEdit(doc)} title="Edit">
+                        <Edit className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setDeleteDoc(doc)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded text-destructive hover:bg-destructive/10" onClick={() => setDeleteDoc(doc)} title="Delete">
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))
         )}
       </div>
