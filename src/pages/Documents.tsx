@@ -103,6 +103,13 @@ export default function Documents() {
 
   useEffect(() => {
     fetchData();
+
+    // Desktop Native Handlers
+    const win = window as any;
+    if (win.electronAPI) {
+      win.electronAPI.onCreateDoc(() => setOpen(true));
+      win.electronAPI.onSyncNow(() => syncDocuments([]));
+    }
   }, []);
 
   const fetchData = async () => {

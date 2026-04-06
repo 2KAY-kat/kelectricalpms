@@ -1,15 +1,25 @@
-import { ReactNode } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { useSync } from "@/hooks/useSync";
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const { isElectron } = useSync();
+
+  if (isElectron) {
+    return (
+      <main className="flex-1 overflow-auto min-h-screen bg-background">
+        <div className="p-4 sm:p-8 max-w-7xl mx-auto">
+          {children}
+        </div>
+      </main>
+    );
+  }
+
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <main className="flex-1 overflow-auto">
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">

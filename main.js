@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const low = require('lowdb');
 const FileSync = require('lowdb/adapters/FileSync');
@@ -41,6 +41,53 @@ function createWindow() {
   win.once('ready-to-show', () => {
     win.show();
   });
+
+  // Create Branded Native Menu
+  const template = [
+    {
+      label: 'K.Electrical PMS',
+      submenu: [
+        { label: 'Dashboard Home', accelerator: 'CmdOrCtrl+H', click: () => { win.webContents.send('nav-to', '/'); } },
+        { type: 'separator' },
+        { label: 'About K.Electrical', click: () => { win.webContents.send('nav-to', '/branding'); } },
+        { type: 'separator' },
+        { label: 'Quit', role: 'quit' }
+      ]
+    },
+    {
+      label: 'Documents',
+      submenu: [
+        { label: 'All Documents', click: () => { win.webContents.send('nav-to', '/documents'); } },
+        { label: 'New Document', accelerator: 'CmdOrCtrl+N', click: () => { win.webContents.send('create-doc'); } },
+        { type: 'separator' },
+        { label: 'Print Current View', accelerator: 'CmdOrCtrl+P', click: () => { win.webContents.print(); } }
+      ]
+    },
+    {
+      label: 'Projects',
+      submenu: [
+        { label: 'Overview', click: () => { win.webContents.send('nav-to', '/projects'); } },
+        { label: 'Map View', click: () => { win.webContents.send('nav-to', '/map'); } }
+      ]
+    },
+    {
+      label: 'Sync',
+      submenu: [
+        { label: 'Sync Now', accelerator: 'CmdOrCtrl+S', click: () => { win.webContents.send('sync-now'); } },
+        { label: 'Force Re-sync', click: () => { win.webContents.send('force-sync'); } }
+      ]
+    },
+    {
+      label: 'Admin',
+      submenu: [
+        { label: 'Admin Panel', click: () => { win.webContents.send('nav-to', '/admin'); } },
+        { label: 'App Settings', click: () => { win.webContents.send('nav-to', '/branding'); } }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
 
   // During development, load the Vite dev server
   if (isDev) {

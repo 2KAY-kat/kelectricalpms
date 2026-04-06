@@ -18,6 +18,7 @@ import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { SyncProvider } from "@/hooks/useSync";
+import { useNavigate } from "react-router-dom";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Desktop Native Navigation Logic
+    if ((window as any).electronAPI) {
+      (window as any).electronAPI.onNavigate((url: string) => {
+        navigate(url);
+      });
+    }
+  }, [navigate]);
 
   if (loading) {
     return (
