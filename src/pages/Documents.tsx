@@ -772,7 +772,7 @@ export default function Documents() {
         )}
       </div>
 
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {documents.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -790,22 +790,22 @@ export default function Documents() {
             <Card key={doc.id} className="group overflow-hidden border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-card/50 flex flex-col">
               <DocumentThumbnail doc={doc} onClick={() => setPreviewDoc(doc)} />
               
-              <CardContent className="p-3 sm:p-4 flex flex-col flex-1 gap-3">
-                <div className="space-y-1 flex-1">
+              <CardContent className="p-3 sm:p-5 flex flex-col flex-1 gap-4">
+                <div className="space-y-1.5 flex-1">
                   <h3 
-                    className="font-bold text-sm line-clamp-2 text-foreground group-hover:text-primary transition-colors leading-tight min-h-[2.5rem]" 
+                    className="font-bold text-base line-clamp-2 text-foreground group-hover:text-primary transition-colors leading-tight min-h-[3rem]" 
                     title={doc.title}
                   >
                     {doc.title}
                   </h3>
-                  <div className="flex flex-col gap-1 text-[11px] text-muted-foreground">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <CalendarIcon className="h-3 w-3" />
+                  <div className="flex flex-col gap-1.5 text-xs text-muted-foreground font-medium">
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon className="h-3.5 w-3.5" />
                       {format(new Date(doc.created_at), 'MMM dd, yyyy')}
                     </div>
                     {doc.projects && (
-                      <div className="flex items-center gap-1.5 italic">
-                        <FileText className="h-3 w-3" />
+                      <div className="flex items-center gap-2 italic">
+                        <FileText className="h-3.5 w-3.5" />
                         <span className="truncate">{doc.projects.name}</span>
                       </div>
                     )}
@@ -813,16 +813,16 @@ export default function Documents() {
                 </div>
                 
                 {/* Toolbar */}
-                <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                  <div className="flex gap-1.5">
-                    <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-primary/50 text-foreground" onClick={() => setPreviewDoc(doc)} title="Preview">
-                      <Eye className="h-3.5 w-3.5" />
+                <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-md border-muted-foreground/20 hover:border-primary/50 text-foreground transition-all" onClick={() => setPreviewDoc(doc)} title="Preview">
+                      <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-primary/50 text-foreground" onClick={() => generatePDF(doc)} title="Download PDF">
-                      <Download className="h-3.5 w-3.5" />
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-md border-muted-foreground/20 hover:border-primary/50 text-foreground transition-all" onClick={() => generatePDF(doc)} title="Download PDF">
+                      <Download className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-blue-500/50 text-blue-600 dark:text-blue-400" onClick={() => {}} title="Share">
-                      <Share2 className="h-3.5 w-3.5" />
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-md border-muted-foreground/20 hover:border-blue-500/50 text-blue-600 dark:text-blue-400 transition-all" onClick={() => {}} title="Share">
+                      <Share2 className="h-4 w-4" />
                     </Button>
                   </div>
                   
