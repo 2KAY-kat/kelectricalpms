@@ -44,7 +44,10 @@ function DocumentThumbnail({ doc, onClick }: { doc: any; onClick: () => void }) 
   return (
     <div
       ref={containerRef}
-      className="relative bg-white rounded-md flex-none shadow-sm border border-border overflow-hidden cursor-pointer group-hover:shadow-md transition-all duration-200"
+      className={cn(
+        "relative bg-white rounded-t-md flex-none shadow-sm overflow-hidden cursor-pointer selection-none",
+        "after:absolute after:inset-0 after:bg-black/0 hover:after:bg-black/5 after:transition-colors"
+      )}
       style={{ aspectRatio: "1 / 1.414" }}
       onClick={onClick}
     >
@@ -57,7 +60,7 @@ function DocumentThumbnail({ doc, onClick }: { doc: any; onClick: () => void }) 
       </div>
 
       {/* Top Right Badge - rendered outside the scaled canvas so it stays legible */}
-      <div className="absolute top-2 right-2 bg-primary/90 text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded shadow-sm capitalize tracking-wider z-10">
+      <div className="absolute top-2 right-2 bg-primary/90 text-primary-foreground text-[10px] font-bold px-2 py-1 rounded shadow-sm capitalize tracking-wider z-10 border border-white/20">
         {doc.document_type}
       </div>
     </div>
@@ -631,7 +634,7 @@ export default function Documents() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Documents</h1>
-          <p className="text-muted-foreground">Create and manage company documents</p>
+          <p className="text-muted-foreground text-sm">Manage and generate company documents</p>
         </div>
         {!isEmployee && (
           <Dialog open={open} onOpenChange={(isOpen) => {
@@ -642,32 +645,32 @@ export default function Documents() {
             }
           }}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New Document
+              <Button size="sm" className="sm:h-10 sm:px-4">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Document</span>
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingDoc ? "Edit Document" : "Create New Document"}</DialogTitle>
-              <DialogDescription>
-                {editingDoc ? "Update document details" : "Generate a new company document"}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
+            <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 text-foreground">
+              <DialogHeader>
+                <DialogTitle>{editingDoc ? "Edit Document" : "Create New Document"}</DialogTitle>
+                <DialogDescription>
+                  {editingDoc ? "Update document details" : "Generate a new company document"}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-6 mt-4 text-foreground">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2 md:col-span-1">
                   <Label htmlFor="title">Document Title *</Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     required
-                    placeholder="e.g., QUOTATION FOR WALL TOP ELECTRIC FENCE"
+                    placeholder="e.g., QUOTATION FOR SOLAR..."
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="document_type">Document Type</Label>
+                  <Label htmlFor="document_type">Type</Label>
                   <Select
                     value={formData.document_type}
                     onValueChange={(value) => setFormData({ ...formData, document_type: value })}
@@ -678,15 +681,11 @@ export default function Documents() {
                     <SelectContent>
                       <SelectItem value="quotation">Quotation</SelectItem>
                       <SelectItem value="invoice">Invoice</SelectItem>
-                      {/* <SelectItem value="contract">Contract</SelectItem>
-                      <SelectItem value="receipt">Receipt</SelectItem>
-                      <SelectItem value="proposal">Proposal</SelectItem>
-                      <SelectItem value="report">Report</SelectItem> */}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Document Date</Label>
+                  <Label>Date</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -696,8 +695,10 @@ export default function Documents() {
                           !formData.document_date && "text-muted-foreground"
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.document_date ? format(formData.document_date, "dd/MM/yyyy") : <span>Pick a date</span>}
+                        <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                        <span className="truncate">
+                          {formData.document_date ? format(formData.document_date, "dd/MM/yyyy") : "Pick a date"}
+                        </span>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -714,7 +715,7 @@ export default function Documents() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="project_id">Link to Project (Optional)</Label>
+                <Label htmlFor="project_id">Project (Optional)</Label>
                 <Select
                   value={formData.project_id}
                   onValueChange={(value) => setFormData({ ...formData, project_id: value })}
@@ -765,7 +766,7 @@ export default function Documents() {
         )}
       </div>
 
-      <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {documents.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -780,20 +781,29 @@ export default function Documents() {
           </Card>
         ) : (
           documents.map((doc) => (
-            <div key={doc.id} className="flex flex-col gap-3 group">
-              {/* Document A4 Preview Thumbnail */}
+            <Card key={doc.id} className="group overflow-hidden border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-card/50 flex flex-col">
               <DocumentThumbnail doc={doc} onClick={() => setPreviewDoc(doc)} />
-
-              {/* Document Info and Tools */}
-              <div className="px-1 space-y-2 flex flex-col">
-                <div className="min-h-[40px]">
-                  <h3 className="font-semibold text-sm line-clamp-2 text-foreground leading-tight" title={doc.title}>
+              
+              <CardContent className="p-3 sm:p-4 flex flex-col flex-1 gap-3">
+                <div className="space-y-1 flex-1">
+                  <h3 
+                    className="font-bold text-sm line-clamp-2 text-foreground group-hover:text-primary transition-colors leading-tight min-h-[2.5rem]" 
+                    title={doc.title}
+                  >
                     {doc.title}
                   </h3>
-                </div>
-                <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground justify-between">
-                  <span>{format(new Date(doc.created_at), 'MMM dd, yyyy')}</span>
-                  {doc.projects && <span className="truncate max-w-[90px]">{doc.projects.name}</span>}
+                  <div className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <CalendarIcon className="h-3 w-3" />
+                      {format(new Date(doc.created_at), 'MMM dd, yyyy')}
+                    </div>
+                    {doc.projects && (
+                      <div className="flex items-center gap-1.5 italic">
+                        <FileText className="h-3 w-3" />
+                        <span className="truncate">{doc.projects.name}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Toolbar */}
@@ -808,19 +818,30 @@ export default function Documents() {
                     <Share2 className="h-3.5 w-3.5" />
                   </Button>
                   {!isEmployee && (
-                    <>
-                      <div className="flex-1"></div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded text-muted-foreground hover:text-foreground" onClick={() => handleEdit(doc)} title="Edit">
-                        <Edit className="h-3.5 w-3.5" />
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted" 
+                        onClick={() => handleEdit(doc)} 
+                        title="Edit"
+                      >
+                        <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded text-destructive hover:bg-destructive/10" onClick={() => setDeleteDoc(doc)} title="Delete">
-                        <Trash2 className="h-3.5 w-3.5" />
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10" 
+                        onClick={() => setDeleteDoc(doc)} 
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    </>
+                    </div>
                   )}
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))
         )}
       </div>

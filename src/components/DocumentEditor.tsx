@@ -78,7 +78,7 @@ export function DocumentEditor({
           </Button>
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg overflow-hidden hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -147,40 +147,104 @@ export function DocumentEditor({
           </Table>
         </div>
 
+        {/* Mobile Grid Layout for Items */}
+        <div className="md:hidden space-y-4">
+          {items.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8 border rounded-lg border-dashed">
+              No items yet. Click "Add Row" to start.
+            </div>
+          ) : (
+            items.map((item, index) => (
+              <div key={index} className="p-4 border rounded-lg bg-card space-y-3 relative">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeRow(index)}
+                  className="absolute top-2 right-2 h-8 w-8 p-0"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+                
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Input
+                    value={item.description}
+                    onChange={(e) => updateItem(index, 'description', e.target.value)}
+                    placeholder="Item description"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>QTY</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={item.qty}
+                      onChange={(e) => updateItem(index, 'qty', parseFloat(e.target.value) || 0)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Unit Price (K)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.unit_price}
+                      onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="pt-2 border-t flex justify-between items-center">
+                  <span className="text-sm font-medium text-muted-foreground">Amount:</span>
+                  <span className="font-bold">
+                    K {item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
         <div className="flex items-center justify-between">
-          <Label>Add Additional Items</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addRow}>
+          <Label className="text-base font-semibold">Totals</Label>
+          <Button type="button" variant="outline" size="sm" onClick={addRow} className="h-8">
             <Plus className="h-4 w-4 mr-2" />
             Add Row
           </Button>
         </div>
 
-        <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+        <div className="bg-muted/30 p-4 rounded-xl border space-y-4">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Total Cost of Materials:</span>
-            <span className="text-lg font-semibold">
+            <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Materials Subtotal:</span>
+            <span className="text-lg font-bold">
               K {subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
 
-          <div className="flex justify-between items-center gap-4">
-            <Label htmlFor="labor_cost" className="font-medium">Labour Cost:</Label>
-            <Input
-              id="labor_cost"
-              type="number"
-              min="0"
-              step="0.01"
-              value={laborCost}
-              onChange={(e) => onLaborCostChange(parseFloat(e.target.value) || 0)}
-              className="w-48 text-right"
-            />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+            <Label htmlFor="labor_cost" className="font-medium">Labour & Transport:</Label>
+            <div className="flex items-center gap-2 group">
+              <span className="text-muted-foreground font-medium">K</span>
+              <Input
+                id="labor_cost"
+                type="number"
+                min="0"
+                step="0.01"
+                value={laborCost}
+                onChange={(e) => onLaborCostChange(parseFloat(e.target.value) || 0)}
+                className="w-full sm:w-40 text-right font-bold bg-background"
+              />
+            </div>
           </div>
 
-          <div className="flex justify-between items-center pt-2 border-t">
-            <span className="text-lg font-bold">NET TOTAL:</span>
-            <span className="text-xl font-bold text-primary">
+          <div className="flex justify-between items-center pt-4 border-t border-border/50">
+            <span className="text-lg font-black uppercase tracking-tighter">Net Total</span>
+            <div className="text-2xl font-black text-primary drop-shadow-sm">
               K {total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
+            </div>
           </div>
         </div>
       </div>
