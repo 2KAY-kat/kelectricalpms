@@ -807,35 +807,26 @@ export default function Documents() {
                 </div>
                 
                 {/* Toolbar */}
-                <div className="flex gap-1.5 items-center pt-1.5 flex-wrap">
-                  <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-primary/50 text-foreground" onClick={() => setPreviewDoc(doc)} title="Preview">
-                    <Eye className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-primary/50 text-foreground" onClick={() => generatePDF(doc)} title="Download PDF">
-                    <Download className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-blue-500/50 text-blue-600 dark:text-blue-400" onClick={() => {}} title="Share">
-                    <Share2 className="h-3.5 w-3.5" />
-                  </Button>
+                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                  <div className="flex gap-1.5">
+                    <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-primary/50 text-foreground" onClick={() => setPreviewDoc(doc)} title="Preview">
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-primary/50 text-foreground" onClick={() => generatePDF(doc)} title="Download PDF">
+                      <Download className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-7 w-7 rounded border-muted-foreground/20 hover:border-blue-500/50 text-blue-600 dark:text-blue-400" onClick={() => {}} title="Share">
+                      <Share2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  
                   {!isEmployee && (
                     <div className="flex gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted" 
-                        onClick={() => handleEdit(doc)} 
-                        title="Edit"
-                      >
-                        <Edit className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded text-muted-foreground hover:text-foreground" onClick={() => handleEdit(doc)} title="Edit">
+                        <Edit className="h-3.5 w-3.5" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive hover:bg-destructive/10" 
-                        onClick={() => setDeleteDoc(doc)} 
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded text-destructive hover:bg-destructive/10" onClick={() => setDeleteDoc(doc)} title="Delete">
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   )}

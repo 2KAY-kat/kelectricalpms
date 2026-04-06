@@ -67,13 +67,16 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle>Document Preview</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[84vh]">
-          <div className="p-4 sm:p-8 min-w-max flex justify-center bg-gray-50/50" ref={paperRef}>
-            <div className="shadow-2xl">
-              <DocumentPaper doc={doc} paperWidth={Math.max(paperWidth, 595)} />
+        <div className="h-[84vh] overflow-auto overscroll-none touch-auto">
+          <div className="p-4 sm:p-8 flex justify-start sm:justify-center bg-gray-100/50 min-h-full min-w-max">
+            <div 
+              className="shadow-2xl bg-white shrink-0 mb-8" 
+              style={{ width: '595px', minWidth: '595px' }}
+            >
+              <DocumentPaper doc={doc} paperWidth={595} />
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
