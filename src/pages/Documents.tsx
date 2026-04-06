@@ -228,7 +228,7 @@ export default function Documents() {
     });
   };
 
-  const generatePDF = async (doc: any) => {
+  const generatePDF = async (doc: any, mode: "download" | "share" = "download") => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.width;
     const pageHeight = pdf.internal.pageSize.height;
@@ -292,7 +292,7 @@ export default function Documents() {
       if (isInvoice) {
         pdf.setFontSize(16);
         pdf.setTextColor(0, 0, 0);
-        pdf.setFont("Times New Roman", "bold");
+        pdf.setFont("times", "bold");
         pdf.text("INVOICE", pageWidth - 45, yPos + 5, { align: "right" });
         yPos += 15; // Push letterhead down
       }
@@ -302,7 +302,7 @@ export default function Documents() {
       // Overlay date on the letterhead's date placeholder (top-right of header)
       pdf.setFontSize(12);
       pdf.setTextColor(0, 0, 0);
-      pdf.setFont(undefined, "bold");
+      pdf.setFont("times", "bold");
       pdf.text(`Date: ${dateStr}`, pageWidth - 13, yPos + headerHeight - 18, { align: "right" });
       
       yPos += headerHeight;
@@ -345,7 +345,7 @@ export default function Documents() {
 
     pdf.setFontSize(pxToPt(attentionFontPx));
     pdf.setTextColor(0, 0, 0);
-    pdf.setFont("Times New Roman", "normal");
+    pdf.setFont("times", "normal");
     const attText = doc.content?.attention_to ? `Att: ${doc.content.attention_to}` : "Att:";
     pdf.text(attText, headerMarginX + pxToMm(previewAttentionIndentPx), attentionBaselineY);
     
@@ -360,7 +360,7 @@ export default function Documents() {
 
     // Document Title - centered and bold
     pdf.setFontSize(pxToPt(titleFontPx));
-    pdf.setFont("Times New Roman", "bold");
+    pdf.setFont("times", "bold");
     pdf.text(doc.title.toUpperCase(), pageWidth / 2, titleBaselineY, { align: "center" });
     yPos = titleTopY + pxToMm(titleLineHeightPx + previewSectionGapPx);
 
@@ -618,7 +618,7 @@ export default function Documents() {
       }
       yPos += 20; 
       pdf.setFontSize(11);
-      pdf.setFont("Times New Roman", "italic");
+      pdf.setFont("times", "italic");
       pdf.setTextColor(0, 0, 0);
       pdf.text("Authorised signature: .......................................", pageWidth - marginX - 5, yPos, { align: "right" });
     }
@@ -627,8 +627,33 @@ export default function Documents() {
     pdf.setFillColor(245, 158, 11);
     pdf.rect(0, pageHeight - 4, pageWidth, 4, "F");
 
-    pdf.save(`${doc.title.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
-    toast.success("PDF downloaded successfully!");
+    const pdfBlob = pdf.output("blob");
+    const fileName = `${doc.title.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+
+    if (mode === "download") {
+      pdf.save(fileName);
+      toast.success("PDF downloaded successfully!");
+    } else if (mode === "share") {
+      const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: doc.title,
+            text: "Shared From K.Electrical Document Generator",
+          });
+          toast.success("Document shared successfully!");
+        } catch (error) {
+          if ((error as Error).name !== 'AbortError') {
+            toast.error("Failed to share document");
+            console.error("Sharing error:", error);
+          }
+        }
+      } else {
+        toast.error("File sharing is not supported on this browser. Try downloading instead.");
+      }
+    }
   };
 
   if (loading) {
@@ -821,7 +846,7 @@ export default function Documents() {
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-md border-muted-foreground/20 hover:border-primary/50 text-foreground transition-all" onClick={() => generatePDF(doc)} title="Download PDF">
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-md border-muted-foreground/20 hover:border-blue-500/50 text-blue-600 dark:text-blue-400 transition-all" onClick={() => {}} title="Share">
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-md border-muted-foreground/20 hover:border-blue-500/50 text-blue-600 dark:text-blue-400 transition-all" onClick={() => generatePDF(doc, "share")} title="Share">
                       <Share2 className="h-4 w-4" />
                     </Button>
                   </div>
