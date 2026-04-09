@@ -66,6 +66,9 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
       <DialogContent className="w-[min(96vw,1100px)] max-w-[1100px] max-h-[92vh] p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle>Document Preview</DialogTitle>
+          <DialogDescription className="sr-only">
+            Preview of the generated document.
+          </DialogDescription>
         </DialogHeader>
         <div className="h-[84vh] overflow-auto overscroll-none touch-auto">
           <div className="p-4 sm:p-8 flex justify-start sm:justify-center bg-gray-100/50 min-h-full min-w-max">

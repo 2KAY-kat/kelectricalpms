@@ -47,7 +47,42 @@ In Supabase Auth URL configuration, set:
 ## Useful commands
 
 - `npm run build`
+- `npm run android:sync`
 - `npm run preview`
 - `npm run db:push`
 - `npm run db:reset`
 - `npm run db:types`
+
+## Android APK without Android Studio
+
+This repo is already wired for Android with Capacitor:
+
+- `capacitor.config.ts`
+- `android/app/build.gradle`
+
+The web app build and Android sync were verified with:
+
+- `npm run build`
+- `npx cap sync android`
+
+### Fastest shipping path
+
+Use GitHub Actions to build the APK so you do not need Android Studio installed locally.
+
+1. In GitHub, open Settings > Secrets and variables > Actions.
+2. Add these secrets:
+   `VITE_SUPABASE_PROJECT_ID`
+   `VITE_SUPABASE_PUBLISHABLE_KEY`
+   `VITE_SUPABASE_URL`
+3. Open the `Android APK` workflow in Actions.
+4. Run it manually, or push to `main` or `master`.
+5. Download the `kelectrical-pms-debug-apk` artifact.
+6. Install `app-debug.apk` on the phone.
+
+### What to expect on Android
+
+- Android packages the same React frontend, so the screens, routes, and general UI feel stay aligned with the web app.
+- Android uses the non-Electron app path, which is the same layout branch used by the browser version.
+- Electron-only local document storage and native desktop menu hooks do not exist on Android yet.
+- PDF sharing should work well on Android because the app already uses `navigator.share` when supported.
+- A debug APK is fine for internal distribution tomorrow. For broader external distribution or Play Store upload, add release signing next.

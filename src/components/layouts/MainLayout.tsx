@@ -1,4 +1,7 @@
+import { ReactNode } from "react";
 import { useSync } from "@/hooks/useSync";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 interface MainLayoutProps {
   children: ReactNode;
