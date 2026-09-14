@@ -10,30 +10,8 @@ interface DocumentPreviewProps {
 }
 
 export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProps) {
-  if (!doc) return null;
-
   const paperRef = useRef<HTMLDivElement | null>(null);
   const [paperWidth, setPaperWidth] = useState(595);
-  const items = doc.content?.items || [];
-  const subtotal = doc.content?.subtotal || 0;
-  const laborCost = doc.content?.labor_cost || 0;
-  const total = doc.content?.total || 0;
-  const docDate = doc.content?.document_date
-    ? new Date(doc.content.document_date)
-    : new Date(doc.created_at);
-  const dateStr = format(docDate, "dd/MM/yyyy");
-  const isInvoice = doc.document_type === "invoice";
-
-  const minRows = 10;
-  const emptyRows = Math.max(0, minRows - items.length);
-
-  const formatGroupedNumber = (value: number) =>
-    Number(value || 0).toLocaleString("en-US").replace(/,/g, ", ");
-
-  const formatAmount = (amount: number) => {
-    const [kwacha, tambala] = amount.toFixed(2).split(".");
-    return { kwacha: formatGroupedNumber(Number(kwacha)), tambala };
-  };
 
   useEffect(() => {
     const node = paperRef.current;
@@ -60,6 +38,29 @@ export function DocumentPreview({ doc, open, onOpenChange }: DocumentPreviewProp
 
     return () => observer.disconnect();
   }, [open]);
+
+  if (!doc) return null;
+
+  const items = doc.content?.items || [];
+  const subtotal = doc.content?.subtotal || 0;
+  const laborCost = doc.content?.labor_cost || 0;
+  const total = doc.content?.total || 0;
+  const docDate = doc.content?.document_date
+    ? new Date(doc.content.document_date)
+    : new Date(doc.created_at);
+  const dateStr = format(docDate, "dd/MM/yyyy");
+  const isInvoice = doc.document_type === "invoice";
+
+  const minRows = 10;
+  const emptyRows = Math.max(0, minRows - items.length);
+
+  const formatGroupedNumber = (value: number) =>
+    Number(value || 0).toLocaleString("en-US").replace(/,/g, ", ");
+
+  const formatAmount = (amount: number) => {
+    const [kwacha, tambala] = amount.toFixed(2).split(".");
+    return { kwacha: formatGroupedNumber(Number(kwacha)), tambala };
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
