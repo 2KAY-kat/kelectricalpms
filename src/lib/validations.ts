@@ -47,6 +47,7 @@ export const documentSchema = z.object({
     .min(1, "Document title is required")
     .max(200, "Document title must be less than 200 characters"),
   document_type: z.enum(["quotation", "receipt", "contract", "invoice", "proposal", "report"]),
+  status: z.enum(["draft", "final"]).optional().default("draft"),
   project_id: z.string().uuid().optional(),
   content: z.object({
     attention_to: z.string().max(200).optional(),

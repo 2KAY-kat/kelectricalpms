@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +25,6 @@ import { DocumentEditor } from "@/components/DocumentEditor";
 import { DocumentPreview, DocumentPaper } from "@/components/DocumentPreview";
 import { useSync } from "@/hooks/useSync";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { PDF_FONT_FAMILIES, ensurePdfFonts } from "@/lib/pdfFonts";
 
@@ -85,6 +84,7 @@ export default function Documents() {
   const [editingDoc, setEditingDoc] = useState<any>(null);
   const [deleteDoc, setDeleteDoc] = useState<any>(null);
   const [previewDoc, setPreviewDoc] = useState<any>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "final">("all");
   const [formData, setFormData] = useState({
     title: "",
     document_type: "quotation",
@@ -100,6 +100,9 @@ export default function Documents() {
       total: 0,
     },
   });
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -131,8 +134,13 @@ export default function Documents() {
     setLoading(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, status: "draft" | "final" = "final") => {
     e.preventDefault();
+
+    if (draftTimerRef.current) {
+      clearTimeout(draftTimerRef.current);
+      draftTimerRef.current = null;
+    }
 
     try {
       const items = formData.content.items || [];
@@ -142,6 +150,7 @@ export default function Documents() {
       const dataToValidate = {
         title: formData.title,
         document_type: formData.document_type,
+        status,
         content: {
           ...formData.content,
           document_date: formData.document_date.toISOString(),
@@ -153,13 +162,14 @@ export default function Documents() {
 
       const validatedData = documentSchema.parse(dataToValidate);
 
-      if (editingDoc) {
-        const result = await saveDocument({ ...validatedData, id: editingDoc.id });
+      if (editingDoc || currentDraftId) {
+        const result = await saveDocument({ ...validatedData, id: editingDoc?.id || currentDraftId });
 
         if (result) {
-          toast.success("Document updated successfully!");
+          toast.success(status === "draft" ? "Draft saved!" : "Document finalized!");
           setOpen(false);
           setEditingDoc(null);
+          setCurrentDraftId(null);
           resetForm();
           fetchData();
         }
@@ -167,8 +177,9 @@ export default function Documents() {
         const result = await saveDocument(validatedData);
 
         if (result) {
-          toast.success("Document created successfully!");
+          toast.success(status === "draft" ? "Draft saved!" : "Document created!");
           setOpen(false);
+          setCurrentDraftId(null);
           resetForm();
           fetchData();
         }
@@ -185,6 +196,7 @@ export default function Documents() {
 
   const handleEdit = (doc: any) => {
     setEditingDoc(doc);
+    setCurrentDraftId(doc.status === "draft" ? doc.id : null);
     setFormData({
       title: doc.title,
       document_type: doc.document_type,
@@ -233,7 +245,53 @@ export default function Documents() {
         total: 0,
       },
     });
+    setCurrentDraftId(null);
   };
+
+  const saveDraft = useCallback(async (data: typeof formData, draftId?: string | null) => {
+    if (!data.title.trim()) return;
+    setSavingDraft(true);
+    try {
+      const items = data.content.items || [];
+      const subtotal = items.reduce((sum: number, item: any) => sum + (item.amount || 0), 0);
+      const total = subtotal + (data.content.labor_cost || 0);
+
+      const doc = {
+        ...(draftId ? { id: draftId } : {}),
+        title: data.title,
+        document_type: data.document_type,
+        status: "draft",
+        project_id: data.project_id || undefined,
+        content: {
+          ...data.content,
+          document_date: data.document_date.toISOString(),
+          subtotal,
+          total,
+        },
+      };
+
+      const result = await saveDocument(doc);
+      if (result?.id) {
+        setCurrentDraftId(result.id);
+      }
+    } catch (err) {
+      console.error("Auto-save draft error:", err);
+    }
+    setSavingDraft(false);
+  }, [saveDocument]);
+
+  const handleFormChange = useCallback((updater: (prev: typeof formData) => typeof formData) => {
+    setFormData((prev) => {
+      const next = updater(prev);
+      if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+      if (next.title.trim()) {
+        draftTimerRef.current = setTimeout(() => {
+          saveDraft(next, currentDraftId);
+        }, 2000);
+      }
+      return next;
+    });
+  }, [saveDraft, currentDraftId]);
 
   const generatePDF = async (doc: any, mode: "download" | "share" = "download") => {
     const pdf = new jsPDF();
@@ -678,7 +736,9 @@ export default function Documents() {
           <Dialog open={open} onOpenChange={(isOpen) => {
             setOpen(isOpen);
             if (!isOpen) {
+              if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
               setEditingDoc(null);
+              setCurrentDraftId(null);
               resetForm();
             }
           }}>
@@ -702,7 +762,7 @@ export default function Documents() {
                   <Input
                     id="title"
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) => handleFormChange((prev) => ({ ...prev, title: e.target.value }))}
                     required
                     placeholder="e.g., QUOTATION FOR SOLAR..."
                   />
@@ -711,7 +771,7 @@ export default function Documents() {
                   <Label htmlFor="document_type">Type</Label>
                   <Select
                     value={formData.document_type}
-                    onValueChange={(value) => setFormData({ ...formData, document_type: value })}
+                    onValueChange={(value) => handleFormChange((prev) => ({ ...prev, document_type: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -743,7 +803,7 @@ export default function Documents() {
                       <Calendar
                         mode="single"
                         selected={formData.document_date}
-                        onSelect={(date) => date && setFormData({ ...formData, document_date: date })}
+                        onSelect={(date) => date && handleFormChange((prev) => ({ ...prev, document_date: date }))}
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
                       />
@@ -756,7 +816,7 @@ export default function Documents() {
                 <Label htmlFor="project_id">Project (Optional)</Label>
                 <Select
                   value={formData.project_id}
-                  onValueChange={(value) => setFormData({ ...formData, project_id: value })}
+                  onValueChange={(value) => handleFormChange((prev) => ({ ...prev, project_id: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a project" />
@@ -777,25 +837,36 @@ export default function Documents() {
                 notes={formData.content.notes}
                 attentionTo={formData.content.attention_to}
                 onItemsChange={(items) =>
-                  setFormData({ ...formData, content: { ...formData.content, items } })
+                  handleFormChange((prev) => ({ ...prev, content: { ...prev.content, items } }))
                 }
                 onLaborCostChange={(cost) =>
-                  setFormData({ ...formData, content: { ...formData.content, labor_cost: cost } })
+                  handleFormChange((prev) => ({ ...prev, content: { ...prev.content, labor_cost: cost } }))
                 }
                 onNotesChange={(notes) =>
-                  setFormData({ ...formData, content: { ...formData.content, notes } })
+                  handleFormChange((prev) => ({ ...prev, content: { ...prev.content, notes } }))
                 }
                 onAttentionToChange={(value) =>
-                  setFormData({ ...formData, content: { ...formData.content, attention_to: value } })
+                  handleFormChange((prev) => ({ ...prev, content: { ...prev.content, attention_to: value } }))
                 }
               />
 
               <div className="flex justify-end gap-2 pt-4 border-t">
+                {savingDraft && (
+                  <span className="text-xs text-muted-foreground self-center mr-auto">Saving draft...</span>
+                )}
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                   Cancel
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={(e) => handleSubmit(e, "draft")}
+                  disabled={!formData.title.trim()}
+                >
+                  Save Draft
+                </Button>
                 <Button type="submit">
-                  {editingDoc ? "Update Document" : "Create Document"}
+                  {editingDoc || currentDraftId ? "Finalize" : "Create Document"}
                 </Button>
               </div>
             </form>
@@ -803,6 +874,23 @@ export default function Documents() {
         </Dialog>
         )}
       </div>
+
+      {documents.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Filter:</span>
+          {(["all", "draft", "final"] as const).map((filter) => (
+            <Button
+              key={filter}
+              variant={statusFilter === filter ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter(filter)}
+              className="h-7 text-xs capitalize"
+            >
+              {filter === "all" ? `All (${documents.length})` : `${filter} (${documents.filter((d) => d.status === filter).length})`}
+            </Button>
+          ))}
+        </div>
+      )}
 
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {documents.length === 0 ? (
@@ -817,19 +905,34 @@ export default function Documents() {
               )}
             </CardContent>
           </Card>
+        ) : documents.filter((doc) => statusFilter === "all" || doc.status === statusFilter).length === 0 ? (
+          <Card className="col-span-full">
+            <CardContent className="flex items-center justify-center py-12">
+              <p className="text-muted-foreground">No {statusFilter} documents found</p>
+            </CardContent>
+          </Card>
         ) : (
-          documents.map((doc) => (
+          documents
+            .filter((doc) => statusFilter === "all" || doc.status === statusFilter)
+            .map((doc) => (
             <Card key={doc.id} className="group overflow-hidden border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-card/50 flex flex-col">
               <DocumentThumbnail doc={doc} onClick={() => setPreviewDoc(doc)} />
               
               <CardContent className="p-3 sm:p-5 flex flex-col flex-1 gap-4">
                 <div className="space-y-1.5 flex-1">
-                  <h3 
-                    className="font-bold text-base line-clamp-2 text-foreground group-hover:text-primary transition-colors leading-tight min-h-[3rem]" 
-                    title={doc.title}
-                  >
-                    {doc.title}
-                  </h3>
+                  <div className="flex items-start gap-2">
+                    <h3 
+                      className="font-bold text-base line-clamp-2 text-foreground group-hover:text-primary transition-colors leading-tight min-h-[3rem]" 
+                      title={doc.title}
+                    >
+                      {doc.title}
+                    </h3>
+                    {doc.status === "draft" && (
+                      <span className="shrink-0 inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20 uppercase tracking-wide">
+                        Draft
+                      </span>
+                    )}
+                  </div>
                   <div className="flex flex-col gap-1.5 text-xs text-muted-foreground font-medium">
                     <div className="flex items-center gap-2">
                       <CalendarIcon className="h-3.5 w-3.5" />
